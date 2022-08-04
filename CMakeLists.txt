@@ -23,6 +23,10 @@ include_directories("${kProcessor}/ThirdParty/caches/include")
 # END kProcessor Setup
 # ----------------------------------------------------------------------------
 
-add_executable (index index.cpp)
-target_link_libraries (index kProcessor z)
-target_include_directories(index INTERFACE ${kProcessor_INCLUDE_PATH})
+# add_executable (index modified_index.cpp index.cpp)
+# target_link_libraries (index kProcessor z)
+# target_include_directories(index INTERFACE ${kProcessor_INCLUDE_PATH})
+
+add_executable (histo histogram.cpp)
+target_link_libraries (histo kProcessor z)
+target_include_directories(histo INTERFACE ${kProcessor_INCLUDE_PATH})
