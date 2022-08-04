@@ -17,7 +17,7 @@ using PAIRS_COUNTER = phmap::parallel_flat_hash_map<std::pair<uint64_t, uint64_t
     float, boost::hash<pair<uint64_t, uint64_t>>,
     std::equal_to<std::pair<uint64_t, uint64_t>>,
     std::allocator<std::pair<const std::pair<uint64_t, uint64_t>, uint64_t>>,
-    4, std::mutex>;
+    8, std::mutex>;
 
 vector<tuple<uint64_t, uint64_t>> splitted_ranges(uint64_t max_hash, int cores) {
     vector<tuple<uint64_t, uint64_t>> ranges;
