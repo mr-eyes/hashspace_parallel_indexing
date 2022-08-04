@@ -68,7 +68,7 @@ inline std::vector<std::string> glob2(const std::string& pattern) {
 
 
 
-void bins_indexing_hashsplit(string bins_dir, int selective_kSize, uint64_t from_hash, uint64_t to_hash) {
+void bins_indexing_hashsplit(colored_kDataFrame* res, string bins_dir, int selective_kSize, uint64_t from_hash, uint64_t to_hash) {
 
     kDataFrame* frame;
     std::string dir_prefix = bins_dir.substr(bins_dir.find_last_of("/\\") + 1);
@@ -132,7 +132,7 @@ void bins_indexing_hashsplit(string bins_dir, int selective_kSize, uint64_t from
         }
     }
 
-    cout << "namesmap construction done..." << endl;
+    // // cout << "namesmap construction done..." << endl;
 
 
     // ----------------------------------------------------------------
@@ -159,7 +159,7 @@ void bins_indexing_hashsplit(string bins_dir, int selective_kSize, uint64_t from
     for (const auto& [bin_basename, bin_path] : basename_to_path) {
         //START
 
-        cout << "Processing " << ++processed_bins_count << "/" << total_bins_number << " | " << bin_basename << " ... " << endl;
+        // cout << "Processing " << ++processed_bins_count << "/" << total_bins_number << " | " << bin_basename << " ... " << endl;
 
         flat_hash_map<uint64_t, uint64_t> convertMap;
 
@@ -178,8 +178,9 @@ void bins_indexing_hashsplit(string bins_dir, int selective_kSize, uint64_t from
         bin_hashes.phmap_load(ar_in);
 
         for (const uint64_t& hashed_kmer : bin_hashes) {
-            
-            if(!(from_hash >= hashed_kmer < to_hash)) continue;
+
+            if (!(from_hash <= hashed_kmer && hashed_kmer < to_hash)) continue;
+
 
             uint64_t currentTag = frame->getCount(hashed_kmer);
             auto itc = convertMap.find(currentTag);
@@ -245,7 +246,7 @@ void bins_indexing_hashsplit(string bins_dir, int selective_kSize, uint64_t from
             // no need now
             // if (frame->getCount(hashed_kmer) != itc->second) {
             //     //frame->setC(kmer,itc->second);
-            //     cout << "Error Founded " << hashed_kmer << " from sequence " << readName << " expected "
+            //     // cout << "Error Founded " << hashed_kmer << " from sequence " << readName << " expected "
             //         << itc->second << " found " << frame->getCount(hashed_kmer) << endl;
             //     exit(1);
             // }
@@ -259,8 +260,8 @@ void bins_indexing_hashsplit(string bins_dir, int selective_kSize, uint64_t from
             }
 
         }
-        cout << "   saved_kmers  (~" << frame->size() << ")." << endl << endl;
-        cout << "   saved_colors (~" << legend->size() << ")." << endl << endl;
+        // cout << "   saved_kmers  (~" << frame->size() << ")." << endl << endl;
+        // cout << "   saved_colors (~" << legend->size() << ")." << endl << endl;
 
         // END
 
@@ -272,7 +273,7 @@ void bins_indexing_hashsplit(string bins_dir, int selective_kSize, uint64_t from
         colors->setColor(it.first, it.second);
     }
 
-    colored_kDataFrame* res = new colored_kDataFrame();
+    // colored_kDataFrame* res = new colored_kDataFrame();
     res->setColorTable(colors);
     res->setkDataFrame(frame);
     for (auto iit = namesMap.begin(); iit != namesMap.end(); iit++) {
@@ -280,6 +281,6 @@ void bins_indexing_hashsplit(string bins_dir, int selective_kSize, uint64_t from
         res->namesMap[sampleID] = iit->second;
         res->namesMapInv[iit->second] = sampleID;
     }
-    cout << "saving to " << dir_prefix << " ..." << endl;
-    res->save(dir_prefix);
+    // cout << "saving to " << dir_prefix << " ..." << endl;
+    // res->save(dir_prefix);
 }
