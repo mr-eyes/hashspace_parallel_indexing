@@ -145,9 +145,7 @@ int main(int argc, char** argv) {
                     uint64_t from_hash = get<0>(ranges[i]);
                     uint64_t to_hash = get<1>(ranges[i]);
 
-                    if (!(from_hash <= hash && hash < to_hash)) {
-                        continue;
-                    }
+                    if (!(from_hash <= hash && hash < to_hash)) continue;
                     auto _p = make_pair(from_hash, to_hash);
                     counter.try_emplace_l(_p, [](PAIRS_COUNTER::value_type& v) { v.second++; });
                 }
