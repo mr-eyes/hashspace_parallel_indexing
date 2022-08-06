@@ -17,7 +17,7 @@ include_directories("${kProcessor}/ThirdParty/MQF/include")
 include_directories("${kProcessor}/ThirdParty/Blight")
 include_directories (${kProcessor_INCLUDE_PATH})
 include_directories("${kProcessor}/ThirdParty/caches/include")
-
+include_directories("${PROJECT_SOURCE_DIR}/include")
 
 # ----------------------------------------------------------------------------
 # END kProcessor Setup
@@ -26,6 +26,10 @@ include_directories("${kProcessor}/ThirdParty/caches/include")
 add_executable (index modified_index.cpp index.cpp)
 target_link_libraries (index kProcessor z)
 target_include_directories(index INTERFACE ${kProcessor_INCLUDE_PATH})
+
+add_executable (pairwise index_and_pairwise.cpp modified_index.cpp kSpider_pairwise.cpp)
+target_link_libraries (pairwise kProcessor z)
+target_include_directories(pairwise INTERFACE ${kProcessor_INCLUDE_PATH})
 
 add_executable (histo histogram.cpp)
 target_link_libraries (histo kProcessor z)

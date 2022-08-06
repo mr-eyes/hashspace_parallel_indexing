@@ -30,12 +30,10 @@ vector<tuple<uint64_t, uint64_t>> splitted_ranges(uint64_t max_hash, int cores) 
         ranges.push_back({ from_hash, to_hash });
         from_hash += step;
     }
-
-    if (to_hash < max_hash) {
+    
+    if (to_hash < max_hash)
         ranges[cores - 1] = { get<0>(ranges[cores - 1]), max_hash };
-    }
-
-
+    
     return ranges;
 }
 
