@@ -67,7 +67,13 @@ int main(int argc, char** argv) {
 
     // Constructing namesmap file for just a single time.
     flat_hash_map<string, uint32_t> groupName_to_kmerCount;
-    parallel_flat_hash_map<string, uint32_t> tmp_groupName_to_kmerCount;
+
+    parallel_flat_hash_map<std::string, uint32_t,
+        phmap::priv::hash_default_hash<std::string>,
+        phmap::priv::hash_default_eq<std::string>,
+        std::allocator<std::pair<const std::string, uint32_t>>,
+        1,
+        std::mutex> tmp_groupName_to_kmerCount;
 
 
     int total_bins_number = 0;
@@ -128,7 +134,7 @@ int main(int argc, char** argv) {
 
     cout << "DONE" << endl;
 
-cout << "Now, just wait..." << endl;
+    cout << "Now, just wait..." << endl;
 
 #pragma omp parallel num_threads(indexing_cores)
     {

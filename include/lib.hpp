@@ -59,7 +59,6 @@ vector<tuple<uint64_t, uint64_t>> splitted_ranges(uint64_t max_hash, int cores) 
     uint64_t from_hash = 0;
     uint64_t to_hash = 0;
     uint64_t step = (uint64_t)(max_hash / cores);
-    cout << "step: " << step << endl;
     for (int i = 0; i < cores; i++) {
         to_hash += step;
         ranges.push_back({ from_hash, to_hash });
