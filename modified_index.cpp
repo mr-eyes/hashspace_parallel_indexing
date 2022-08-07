@@ -295,6 +295,7 @@ void ranged_index(
     const vector<file_info>& all_files,
     flat_hash_map<uint64_t, std::vector<uint32_t>>* legend,
     flat_hash_map<uint64_t, uint32_t>& colorsCount,
+    flat_hash_map<uint64_t, string>& kSpider_namesmap,
     const int& kSize,
     const uint64_t& from_hash,
     const uint64_t& to_hash) {
@@ -479,6 +480,9 @@ void ranged_index(
 
         }
 
+    }
+    for(const auto & [grpID, grpName] : inv_groupNameMap){
+        kSpider_namesmap[grpID] = grpName;
     }
     delete frame;
 }

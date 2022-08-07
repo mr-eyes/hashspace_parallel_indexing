@@ -26,7 +26,8 @@ typedef std::chrono::high_resolution_clock Time;
 void pairwise(PAIRS_COUNTER* edges,
     flat_hash_map<uint64_t, std::vector<uint32_t>>* color_to_ids,
     flat_hash_map<uint64_t, uint32_t>& colorsCount,
-    flat_hash_map<uint32_t, uint32_t>& groupID_to_kmerCount,
+    flat_hash_map<string, uint32_t>& groupName_to_kmerCount,
+    flat_hash_map<uint64_t, string>& namesmap,
     int user_threads,
     string index_prefix);
 
@@ -34,6 +35,7 @@ void ranged_index(
     const vector<file_info>& all_files,
     flat_hash_map<uint64_t, std::vector<uint32_t>>* legend,
     flat_hash_map<uint64_t, uint32_t>& colorsCount,
+    flat_hash_map<uint64_t, string>& namesmap,
     const int& kSize,
     const uint64_t& from_hash,
     const uint64_t& to_hash);
@@ -58,7 +60,6 @@ int main(int argc, char** argv) {
 
     // Constructing namesmap file for just a single time.
     flat_hash_map<string, uint32_t> groupName_to_kmerCount;
-    flat_hash_map<uint32_t, uint32_t> groupID_to_kmerCount;
 
     int total_bins_number = 0;
     uint32_t groupID = 0;
@@ -85,13 +86,20 @@ int main(int argc, char** argv) {
 
         cout << ++processed << "/" << all_files.size() << ":" << file.base_name << endl;
         groupName_to_kmerCount.insert(make_pair(file.base_name, bin_hashes.size()));
-        groupID_to_kmerCount.insert(make_pair(groupID, bin_hashes.size()));
 
 
         groupID++;
         total_bins_number++;
     }
 
+    std::ofstream fstream_kmerCount;
+    fstream_kmerCount.open("kSpider_kmer_count.tsv");
+    fstream_kmerCount << "ID\tname\tseq\tkmers\n";
+    uint64_t counter = 0;
+    for (const auto& item : groupName_to_kmerCount) {
+        fstream_kmerCount  << item.first << '\t' << item.second << '\n';
+    }
+    fstream_kmerCount.close();
 
 
 #pragma omp parallel num_threads(cores)
@@ -101,6 +109,11 @@ int main(int argc, char** argv) {
         for (int i = 0; i < cores; i++) {
             uint64_t from_hash = get<0>(ranges[i]);
             uint64_t to_hash = get<1>(ranges[i]);
+
+            cout << "from hash: " << to_string(from_hash) << endl;
+            cout << "to hash: " << to_string(to_hash) << endl;
+            cout << "max hash " << to_string(max_hash) << endl;
+
 
             cout << "INDEXING PART " << i + 1 << endl;
 
@@ -114,12 +127,14 @@ int main(int argc, char** argv) {
             flat_hash_map<uint64_t, uint32_t> colorsCount;
             // auto* legend = new phmap::parallel_flat_hash_map<uint64_t, std::vector<uint32_t>>;
             auto* legend = new flat_hash_map<uint64_t, std::vector<uint32_t>>();
+            flat_hash_map<uint64_t, string> namesmap;
             cout << "starting ..." << endl;
 
             ranged_index(
                 all_files,
                 legend,
                 colorsCount,
+                namesmap,
                 kSize,
                 from_hash,
                 to_hash);
@@ -143,10 +158,8 @@ int main(int argc, char** argv) {
             */
 
             auto* edges = new PAIRS_COUNTER();
-            pairwise(edges, legend, colorsCount, groupID_to_kmerCount, cores, "part_" + to_string(i + 1));
-
-
-
+            pairwise(edges, legend, colorsCount, groupName_to_kmerCount, namesmap, cores, out_dir + "/part_" + to_string(i + 1));
+            delete legend;
 
             /*
                      __   __        ___
@@ -156,16 +169,6 @@ int main(int argc, char** argv) {
              */
 
 
-
-
-
-
-
-
-
-
-
-            delete legend;
         }
     }
 }

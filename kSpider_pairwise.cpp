@@ -66,7 +66,8 @@ void pairwise(
     PAIRS_COUNTER* edges,
     flat_hash_map<uint64_t, std::vector<uint32_t>>* color_to_ids,
     flat_hash_map<uint64_t, uint32_t>& colorsCount,
-    flat_hash_map<uint32_t, uint32_t>& groupID_to_kmerCount,
+    flat_hash_map<string, uint32_t>& groupName_to_kmerCount,
+    flat_hash_map<uint64_t, string>& namesmap,
     int user_threads,
     string index_prefix
 ) {
@@ -135,8 +136,8 @@ void pairwise(
     myfile << "bin_1" << '\t' << "bin_2" << '\t' << "shared_kmers" << '\t' << "max_containment" << '\n';
     uint64_t line_count = 0;
     for (const auto& edge : *edges) {
-        float max_containment = (float)edge.second / min(groupID_to_kmerCount[edge.first.first], groupID_to_kmerCount[edge.first.second]);
-        myfile << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\t' << max_containment << '\n';
+        float max_containment = (float)edge.second / min(groupName_to_kmerCount[namesmap[edge.first.first]], groupName_to_kmerCount[namesmap[edge.first.second]]);
+        myfile << namesmap[edge.first.first] << '\t' << namesmap[edge.first.second] << '\t' << edge.second << '\t' << max_containment << '\n';
     }
     myfile.close();
 

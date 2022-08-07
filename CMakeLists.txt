@@ -34,3 +34,7 @@ target_include_directories(pairwise INTERFACE ${kProcessor_INCLUDE_PATH})
 add_executable (histo histogram.cpp)
 target_link_libraries (histo kProcessor z)
 target_include_directories(histo INTERFACE ${kProcessor_INCLUDE_PATH})
+
+add_executable (bin_compare bin_pairwise.cpp)
+target_link_libraries (bin_compare kProcessor z)
+target_include_directories(bin_compare INTERFACE ${kProcessor_INCLUDE_PATH})
