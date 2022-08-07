@@ -19,6 +19,8 @@ include_directories (${kProcessor_INCLUDE_PATH})
 include_directories("${kProcessor}/ThirdParty/caches/include")
 include_directories("${PROJECT_SOURCE_DIR}/include")
 
+include_directories("${PROJECT_SOURCE_DIR}/lib/progressbar/include")
+
 # ----------------------------------------------------------------------------
 # END kProcessor Setup
 # ----------------------------------------------------------------------------
@@ -30,6 +32,11 @@ target_include_directories(index INTERFACE ${kProcessor_INCLUDE_PATH})
 add_executable (pairwise index_and_pairwise.cpp modified_index.cpp kSpider_pairwise.cpp)
 target_link_libraries (pairwise kProcessor z)
 target_include_directories(pairwise INTERFACE ${kProcessor_INCLUDE_PATH})
+
+add_executable (pairwise_inmemory inmemory_index_and_pairwise.cpp modified_index.cpp kSpider_pairwise.cpp)
+target_link_libraries (pairwise_inmemory kProcessor z)
+target_include_directories(pairwise_inmemory INTERFACE ${kProcessor_INCLUDE_PATH})
+
 
 add_executable (histo histogram.cpp)
 target_link_libraries (histo kProcessor z)
