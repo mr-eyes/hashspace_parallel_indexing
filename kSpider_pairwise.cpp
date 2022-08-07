@@ -128,8 +128,8 @@ void pairwise(
         }
     }
 
-    cout << "pairwise hashmap construction: " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs" << endl;
-    cout << "writing pairwise matrix to " << index_prefix << "_kSpider_pairwise.tsv" << endl;
+    // cout << "pairwise hashmap construction: " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs" << endl;
+    // cout << "writing pairwise matrix to " << index_prefix << "_kSpider_pairwise.tsv" << endl;
 
     std::ofstream myfile;
     myfile.open(index_prefix + "_kSpider_pairwise.tsv");
@@ -137,8 +137,7 @@ void pairwise(
     uint64_t line_count = 0;
     for (const auto& edge : *edges) {
         float max_containment = (float)edge.second / min(groupName_to_kmerCount[namesmap[edge.first.first]], groupName_to_kmerCount[namesmap[edge.first.second]]);
-        myfile << namesmap[edge.first.first] << '\t' << namesmap[edge.first.second] << '\t' << edge.second << '\t' << max_containment << '\n';
+        myfile << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\t' << max_containment << '\n';
     }
     myfile.close();
-
 }

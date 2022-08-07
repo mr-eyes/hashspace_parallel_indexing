@@ -76,6 +76,8 @@ int main(int argc, char** argv) {
 
     auto all_files = glob(bins_dir + "/*");
 
+    cout << "Loading all files and counting hashing using " << cores << " cores..." << endl;
+
 #pragma omp parallel num_threads(cores)
     {
 #pragma omp for
@@ -124,6 +126,9 @@ int main(int argc, char** argv) {
     }
     fstream_kmerCount.close();
 
+    cout << "DONE" << endl;
+
+cout << "Now, just wait..." << endl;
 
 #pragma omp parallel num_threads(indexing_cores)
     {
@@ -137,7 +142,7 @@ int main(int argc, char** argv) {
             // cout << "to hash: " << to_string(to_hash) << endl;
             // cout << "max hash " << to_string(max_hash) << endl;
 
-            cout << "INDEXING PART " << i + 1 << endl;
+            // cout << "INDEXING PART " << i + 1 << endl;
 
             /*
                     _ _  _ ___  ____ _  _ _ _  _ ____
@@ -148,7 +153,7 @@ int main(int argc, char** argv) {
             flat_hash_map<uint64_t, uint32_t> colorsCount;
             auto* legend = new flat_hash_map<uint64_t, std::vector<uint32_t>>();
             flat_hash_map<uint64_t, string> namesmap;
-            cout << "starting ..." << endl;
+            // cout << "starting ..." << endl;
 
             ranged_index(
                 all_files,
