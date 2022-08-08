@@ -49,6 +49,9 @@ int main(int argc, char** argv) {
 
     // Constructing namesmap file for just a single time.
     flat_hash_map<string, uint32_t> groupName_to_kmerCount;
+    flat_hash_map<uint32_t, uint32_t> groupID_to_kmerCount;
+    flat_hash_map<uint64_t, string> namesmap;
+
 
     parallel_flat_hash_map<std::string, uint32_t,
         phmap::priv::hash_default_hash<std::string>,
@@ -126,8 +129,7 @@ int main(int argc, char** argv) {
 
     tmp_groupName_to_kmerCount.clear();
 
-
-
+    bool ___conversion___ = false;
 
     std::ofstream fstream_kmerCount;
     fstream_kmerCount.open(out_dir + "/kSpider_kmer_count.tsv");
@@ -138,7 +140,7 @@ int main(int argc, char** argv) {
     }
     fstream_kmerCount.close();
 
-    cout << "DONE" << endl;
+    cout << "\nDONE" << endl;
 
     cout << "Now, just wait..." << endl;
 
@@ -172,8 +174,6 @@ int main(int argc, char** argv) {
         }
     }
 
-    for (auto& _ : groupNameMap)
-        inv_groupNameMap[_.second] = _.first;
 
 
 #pragma omp parallel num_threads(cores)
@@ -198,8 +198,6 @@ int main(int argc, char** argv) {
 
             flat_hash_map<uint64_t, uint32_t> colorsCount;
             auto* legend = new flat_hash_map<uint64_t, std::vector<uint32_t>>();
-            flat_hash_map<uint64_t, string> namesmap;
-
 
 
 
@@ -216,6 +214,16 @@ int main(int argc, char** argv) {
                 to_hash);
 
 
+
+#pragma omp critical
+            {
+                if (!___conversion___) {
+                    for (auto& [_ID, _NAME] : namesmap) {
+                        groupID_to_kmerCount[_ID] = groupName_to_kmerCount[_NAME];
+                        ~___conversion___;
+                    }
+                }
+            }
 
 
 
@@ -269,10 +277,10 @@ int main(int argc, char** argv) {
     myfile.open(out_dir + "/kSpider_pairwise.tsv");
     myfile << "bin_1" << '\t' << "bin_2" << '\t' << "shared_kmers" << '\t' << "max_containment" << '\n';
     uint64_t line_count = 0;
-    for (const auto& edge : *edges) {
-        float max_containment = (float)edge.second / min(groupName_to_kmerCount[inv_groupNameMap[edge.first.first]], groupName_to_kmerCount[inv_groupNameMap[edge.first.second]]);
-        // myfile << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\t' << max_containment << '\n';
-        myfile << inv_groupNameMap[edge.first.first] << '\t' << inv_groupNameMap[edge.first.second] << '\t' << edge.second << '\t' << max_containment << '\n';
+    for (auto& edge : *edges) {
+        float max_containment = (float)edge.second / min(groupID_to_kmerCount[edge.first.first], groupID_to_kmerCount[edge.first.second]);
+        myfile << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\t' << to_string(max_containment) << '\n';
+        // myfile << namesmap[edge.first.first] << '\t' << namesmap[edge.first.second] << '\t' << edge.second << '\t' << max_containment << '\n';
 
     }
     myfile.close();
