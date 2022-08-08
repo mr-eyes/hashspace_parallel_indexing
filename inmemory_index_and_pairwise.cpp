@@ -45,6 +45,7 @@ int main(int argc, char* argv[]) {
         .help("parts index will split into")
         .scan<'i', int>();
 
+
     try {
         program.parse_args(argc, argv);
     }
@@ -55,23 +56,15 @@ int main(int argc, char* argv[]) {
     }
 
 
-
-    // if (argc < 4) {
-    //     cout << "./index <bins_dir> <out_dir> <min_scale> <cores>" << endl;
-    //     exit(1);
-    // }
-
     string bins_dir = program.get<std::string>("-b");
     string out_dir = program.get<std::string>("-o");
-    int min_scale = program.get<int>("-s"); 
+    int min_scale = program.get<int>("-s");
     int cores = program.get<int>("-c");
     int split_parts = program.get<int>("-p");
     int indexing_cores = (int)(0.9 * cores);
     int pairwise_cores = cores - indexing_cores;
     int loading_cores = (int)(cores * 0.5);
 
-    // cout << "indexing cores: " << indexing_cores << endl;
-    // cout << "pairwise cores: " << pairwise_cores << endl;
 
 
     uint64_t max_hash = UINT64_MAX / (uint64_t)min_scale;
