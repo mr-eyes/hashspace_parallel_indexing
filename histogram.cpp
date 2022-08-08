@@ -10,72 +10,10 @@
 #include <unordered_map>
 #include "parallel_hashmap/phmap_dump.h"
 #include<omp.h>
+#include<lib.hpp>
+
 
 using namespace std;
-
-using PAIRS_COUNTER = phmap::parallel_flat_hash_map<std::pair<uint64_t, uint64_t>,
-    float, boost::hash<pair<uint64_t, uint64_t>>,
-    std::equal_to<std::pair<uint64_t, uint64_t>>,
-    std::allocator<std::pair<const std::pair<uint64_t, uint64_t>, uint64_t>>,
-    8, std::mutex>;
-
-vector<tuple<uint64_t, uint64_t>> splitted_ranges(uint64_t max_hash, int cores) {
-    vector<tuple<uint64_t, uint64_t>> ranges;
-    uint64_t from_hash = 0;
-    uint64_t to_hash = 0;
-    uint64_t step = (uint64_t)(max_hash / cores);
-    cout << "step: " << step << endl;
-    for (int i = 0; i < cores; i++) {
-        to_hash += step;
-        ranges.push_back({ from_hash, to_hash });
-        from_hash += step;
-    }
-    
-    if (to_hash < max_hash)
-        ranges[cores - 1] = { get<0>(ranges[cores - 1]), max_hash };
-    
-    return ranges;
-}
-
-struct file_info {
-    string path;
-    string prefix;
-    string extension;
-    string basename;
-};
-
-
-vector<file_info> glob(const std::string& pattern) {
-
-    glob_t glob_result;
-    memset(&glob_result, 0, sizeof(glob_result));
-
-    int return_value = glob(pattern.c_str(), GLOB_TILDE, NULL, &glob_result);
-    if (return_value != 0) {
-        globfree(&glob_result);
-        std::stringstream ss;
-        ss << "glob() failed with return_value " << return_value << std::endl;
-        throw std::runtime_error(ss.str());
-    }
-
-    std::vector<file_info> filenames;
-    for (size_t i = 0; i < glob_result.gl_pathc; ++i) {
-
-        file_info finfo;
-
-        finfo.path = std::string(glob_result.gl_pathv[i]);
-        size_t _lastindex = finfo.path.find_last_of(".");
-        finfo.prefix = finfo.path.substr(0, _lastindex);
-        finfo.basename = finfo.prefix.substr(finfo.prefix.find_last_of("/\\") + 1);
-
-        filenames.push_back(finfo);
-    }
-    // cleanup
-    globfree(&glob_result);
-
-    // done
-    return filenames;
-}
 
 inline uint64_t to_uint64_t(std::string const& value) {
     uint64_t result = 0;
@@ -98,7 +36,7 @@ int main(int argc, char** argv) {
     string bins_dir = argv[1];
     uint64_t scale = to_uint64_t(argv[2]);
     int user_threads = stoi(argv[3]);
-    auto all_files = glob(bins_dir + "/*.bin");
+    auto all_files = fetch(bins_dir + "/*.bin");
 
     // if(cores > all_files.size()){
     //     cout << "lowering cores to " << all_files.size() << endl;

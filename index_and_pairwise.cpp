@@ -11,7 +11,6 @@
 #include "algorithms.hpp"
 #include<omp.h>
 #include <queue>
-#include <glob.h>
 #include "parallel_hashmap/phmap_dump.h"
 #include "lib.hpp"
 
@@ -21,24 +20,6 @@ using boost::algorithm::join;
 using namespace std;
 using namespace phmap;
 typedef std::chrono::high_resolution_clock Time;
-
-
-void pairwise(PAIRS_COUNTER* edges,
-    flat_hash_map<uint64_t, std::vector<uint32_t>>* color_to_ids,
-    flat_hash_map<uint64_t, uint32_t>& colorsCount,
-    flat_hash_map<string, uint32_t>& groupName_to_kmerCount,
-    flat_hash_map<uint64_t, string>& namesmap,
-    int user_threads,
-    string index_prefix);
-
-void ranged_index(
-    const vector<file_info>& all_files,
-    flat_hash_map<uint64_t, std::vector<uint32_t>>* legend,
-    flat_hash_map<uint64_t, uint32_t>& colorsCount,
-    flat_hash_map<uint64_t, string>& namesmap,
-    const int& kSize,
-    const uint64_t& from_hash,
-    const uint64_t& to_hash);
 
 
 int main(int argc, char** argv) {
@@ -80,12 +61,22 @@ int main(int argc, char** argv) {
     uint32_t groupID = 0;
     int processed = 0;
 
-    auto all_files = glob(bins_dir + "/*");
+    auto all_files = fetch(bins_dir + "/*");
 
     cout << "Loading all files and counting hashing using " << cores << " cores..." << endl;
 
+    int steps_completed = 0;
+    auto step_size = 100ul;
+    int total_steps = (all_files.size() * indexing_cores) / step_size + 1;
+    cout << "total_steps: " << total_steps << endl;
+
+
+
 #pragma omp parallel num_threads(cores)
     {
+
+        size_t local_count = 0;
+
 #pragma omp for
         for (int x = 0; x < all_files.size(); x++) {
             const auto& file = all_files[x];
@@ -112,6 +103,18 @@ int main(int argc, char** argv) {
                 [](parallel_flat_hash_map<string, uint32_t>::value_type& v) {},
                 bin_size
             );
+            if (local_count++ % step_size == step_size - 1)
+            {
+#pragma omp atomic
+                ++steps_completed;
+
+                if (steps_completed % 100 == 1)
+                {
+#pragma omp critical
+                    std::cout << "Progress: " << steps_completed << " of " << total_steps << " (" << std::fixed << std::setprecision(1) << (100.0 * steps_completed / total_steps) << "%)\n";
+                }
+            }
+
         }
     }
 

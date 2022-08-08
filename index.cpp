@@ -1,25 +1,7 @@
 #include "algorithms.hpp"
 #include <parallel_hashmap/phmap.h>
+#include <lib.hpp>
 
-void bins_indexing_hashsplit(colored_kDataFrame* res, string bins_dir, int selective_kSize, uint64_t from_hash, uint64_t to_hash);
-
-vector<tuple<uint64_t, uint64_t>> splitted_ranges(uint64_t max_hash, int cores) {
-    vector<tuple<uint64_t, uint64_t>> ranges;
-    uint64_t from_hash = 0;
-    uint64_t to_hash = 0;
-    uint64_t step = (uint64_t)(max_hash / cores);
-    cout << "step: " << step << endl;
-    for (int i = 0; i < cores; i++) {
-        to_hash += step;
-        ranges.push_back({ from_hash, to_hash });
-        from_hash += step;
-    }
-
-    if (to_hash < max_hash)
-        ranges[cores - 1] = { get<0>(ranges[cores - 1]), max_hash };
-
-    return ranges;
-}
 
 int main(int argc, char** argv) {
 

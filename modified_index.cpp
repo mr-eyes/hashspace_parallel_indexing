@@ -5,7 +5,6 @@
 #include "parallel_hashmap/phmap.h"
 #include "kDataFrame.hpp"
 #include "algorithms.hpp"
-#include <glob.h>
 #include <vector>
 #include <stdexcept>
 #include <sstream>
@@ -13,15 +12,11 @@
 #include <fstream>
 #include "parallel_hashmap/phmap_dump.h"
 #include <queue>
+#include <lib.hpp>
 
 using namespace std;
 
-struct file_info {
-    string path;
-    string prefix;
-    string extension;
-    string base_name;
-};
+
 
 using BINS_MAP = phmap::parallel_flat_hash_map<std::string, phmap::flat_hash_set<uint64_t>,
     phmap::priv::hash_default_hash<std::string>,
@@ -40,35 +35,6 @@ using LEGENDS_MAP = phmap::parallel_flat_hash_map<uint64_t,
 using LEGENDS_MAP_OLD = phmap::parallel_flat_hash_map<uint64_t, std::vector<uint32_t>>;
 
 
-// thanks to https://stackoverflow.com/a/8615450/3371177
-inline std::vector<std::string> glob2(const std::string& pattern) {
-    using namespace std;
-
-    // glob struct resides on the stack
-    glob_t glob_result;
-    memset(&glob_result, 0, sizeof(glob_result));
-
-    // do the glob operation
-    int return_value = glob(pattern.c_str(), GLOB_TILDE, NULL, &glob_result);
-    if (return_value != 0) {
-        globfree(&glob_result);
-        stringstream ss;
-        ss << "glob() failed with return_value " << return_value << endl;
-        throw std::runtime_error(ss.str());
-    }
-
-    // collect all the filenames into a std::list<std::string>
-    vector<string> filenames;
-    for (size_t i = 0; i < glob_result.gl_pathc; ++i) {
-        filenames.push_back(string(glob_result.gl_pathv[i]));
-    }
-
-    // cleanup
-    globfree(&glob_result);
-
-    // done
-    return filenames;
-}
 
 
 
@@ -98,8 +64,8 @@ void bins_indexing_hashsplit(colored_kDataFrame* res, string bins_dir, int kSize
 
     flat_hash_map<string, string> basename_to_path;
 
-    for (const auto& dirEntry : glob2(bins_dir + "/*")) {
-        string file_name = (string)dirEntry;
+    for (const auto& dirEntry : fetch(bins_dir + "/*")) {
+        string file_name = dirEntry.path;
         size_t lastindex = file_name.find_last_of(".");
         string bin_prefix = file_name.substr(0, lastindex);
         std::string bin_basename = bin_prefix.substr(bin_prefix.find_last_of("/\\") + 1);

@@ -25,23 +25,23 @@ include_directories("${PROJECT_SOURCE_DIR}/lib/progressbar/include")
 # END kProcessor Setup
 # ----------------------------------------------------------------------------
 
-add_executable (index modified_index.cpp index.cpp)
+add_executable (index modified_index.cpp index.cpp lib.cpp)
 target_link_libraries (index kProcessor z)
 target_include_directories(index INTERFACE ${kProcessor_INCLUDE_PATH})
 
-add_executable (pairwise index_and_pairwise.cpp modified_index.cpp kSpider_pairwise.cpp)
+add_executable (pairwise index_and_pairwise.cpp modified_index.cpp kSpider_pairwise.cpp lib.cpp)
 target_link_libraries (pairwise kProcessor z)
 target_include_directories(pairwise INTERFACE ${kProcessor_INCLUDE_PATH})
 
-add_executable (pairwise_inmemory inmemory_index_and_pairwise.cpp modified_index.cpp kSpider_pairwise.cpp)
+add_executable (pairwise_inmemory lib.cpp inmemory_index_and_pairwise.cpp modified_index.cpp kSpider_pairwise.cpp)
 target_link_libraries (pairwise_inmemory kProcessor z)
 target_include_directories(pairwise_inmemory INTERFACE ${kProcessor_INCLUDE_PATH})
 
 
-add_executable (histo histogram.cpp)
+add_executable (histo histogram.cpp lib.cpp)
 target_link_libraries (histo kProcessor z)
 target_include_directories(histo INTERFACE ${kProcessor_INCLUDE_PATH})
 
-add_executable (bin_compare bin_pairwise.cpp)
+add_executable (bin_compare bin_pairwise.cpp lib.cpp)
 target_link_libraries (bin_compare kProcessor z)
 target_include_directories(bin_compare INTERFACE ${kProcessor_INCLUDE_PATH})

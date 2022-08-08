@@ -11,7 +11,6 @@
 #include "algorithms.hpp"
 #include<omp.h>
 #include <queue>
-#include <glob.h>
 #include "parallel_hashmap/phmap_dump.h"
 #include "lib.hpp"
 #include "progressbar.hpp"
@@ -21,38 +20,6 @@ using boost::algorithm::join;
 using namespace std;
 using namespace phmap;
 typedef std::chrono::high_resolution_clock Time;
-
-
-void pairwise(PAIRS_COUNTER* edges,
-    flat_hash_map<uint64_t, std::vector<uint32_t>>* color_to_ids,
-    flat_hash_map<uint64_t, uint32_t>& colorsCount,
-    flat_hash_map<string, uint32_t>& groupName_to_kmerCount,
-    flat_hash_map<uint64_t, string>& namesmap,
-    int user_threads,
-    string index_prefix);
-
-void ranged_index(
-    const vector<file_info>& all_files,
-    flat_hash_map<uint64_t, std::vector<uint32_t>>* legend,
-    flat_hash_map<uint64_t, uint32_t>& colorsCount,
-    flat_hash_map<uint64_t, string>& namesmap,
-    const int& kSize,
-    const uint64_t& from_hash,
-    const uint64_t& to_hash);
-
-void inmemory_ranged_index(
-    phmap::parallel_flat_hash_map<std::string, phmap::flat_hash_set<uint64_t>,
-    phmap::priv::hash_default_hash<std::string>,
-    phmap::priv::hash_default_eq<std::string>,
-    std::allocator<std::pair<const std::string, phmap::flat_hash_set<uint64_t>>>,
-    1,
-    std::mutex>* loaded_bins,
-    flat_hash_map<uint64_t, std::vector<uint32_t>>* legend,
-    flat_hash_map<uint64_t, uint32_t>& colorsCount,
-    flat_hash_map<uint64_t, string>& kSpider_namesmap,
-    const int& kSize,
-    const uint64_t& from_hash,
-    const uint64_t& to_hash);
 
 
 int main(int argc, char** argv) {
@@ -68,10 +35,10 @@ int main(int argc, char** argv) {
     int cores = stoi(argv[4]);
     int indexing_cores = (int)(0.9 * cores);
     int pairwise_cores = cores - indexing_cores;
-    int loading_cores = pairwise_cores;
+    int loading_cores = (int)(cores * 0.5);
 
-    cout << "indexing cores: " << indexing_cores << endl;
-    cout << "pairwise cores: " << pairwise_cores << endl;
+    // cout << "indexing cores: " << indexing_cores << endl;
+    // cout << "pairwise cores: " << pairwise_cores << endl;
 
 
     uint64_t max_hash = UINT64_MAX / (uint64_t)min_scale;
@@ -103,7 +70,7 @@ int main(int argc, char** argv) {
     uint32_t groupID = 0;
     int processed = 0;
 
-    auto all_files = glob(bins_dir + "/*");
+    auto all_files = fetch(bins_dir + "/*");
     bin_to_hashes->reserve(all_files.size());
 
     cout << "Loading all files and counting hashing using " << cores << " cores..." << endl;
@@ -114,7 +81,7 @@ int main(int argc, char** argv) {
     bar.set_done_char("█");
     bar.set_opening_bracket_char("{");
     bar.set_closing_bracket_char("}");
-#pragma omp parallel num_threads(cores)
+#pragma omp parallel num_threads(loading_cores)
     {
 #pragma omp for
         for (int x = 0; x < all_files.size(); x++) {
@@ -175,7 +142,41 @@ int main(int argc, char** argv) {
 
     cout << "Now, just wait..." << endl;
 
-#pragma omp parallel num_threads(indexing_cores)
+    auto* edges = new PAIRS_COUNTER();
+
+
+    flat_hash_map<string, string> namesMap;
+    flat_hash_map<string, uint64_t> tagsMap;
+    flat_hash_map<string, uint64_t> groupNameMap;
+    flat_hash_map<uint64_t, string> inv_groupNameMap;
+    string seqName, groupName;
+    flat_hash_map<string, uint64_t> groupCounter;
+
+    for (auto& __it : *bin_to_hashes) {
+
+        string bin_basename = __it.first;
+
+        seqName = bin_basename;
+        groupName = bin_basename;
+
+        namesMap.insert(make_pair(seqName, groupName));
+        auto it = groupNameMap.find(groupName);
+        groupCounter[groupName]++;
+        if (it == groupNameMap.end()) {
+            groupNameMap.insert(make_pair(groupName, groupID));
+            tagsMap.insert(make_pair(to_string(groupID), groupID));
+            vector<uint32_t> tmp;
+            tmp.clear();
+            tmp.push_back(groupID);
+            groupID++;
+        }
+    }
+
+    for (auto& _ : groupNameMap)
+        inv_groupNameMap[_.second] = _.first;
+
+
+#pragma omp parallel num_threads(cores)
     {
 #pragma omp for
 
@@ -239,19 +240,16 @@ int main(int argc, char** argv) {
 
             */
 
-            auto* edges = new PAIRS_COUNTER();
-            pairwise(
+            pairwise_aggregate(
                 edges,
                 legend,
                 colorsCount,
                 groupName_to_kmerCount,
-                namesmap,
-                pairwise_cores,
-                out_dir + "/part_" + to_string(i + 1)
+                inv_groupNameMap,
+                1 // cores
             );
 
             delete legend;
-            delete edges;
 
             /*
                      __   __        ___
@@ -266,6 +264,21 @@ int main(int argc, char** argv) {
 
         }
     }
+
+    std::ofstream myfile;
+    myfile.open(out_dir + "/kSpider_pairwise.tsv");
+    myfile << "bin_1" << '\t' << "bin_2" << '\t' << "shared_kmers" << '\t' << "max_containment" << '\n';
+    uint64_t line_count = 0;
+    for (const auto& edge : *edges) {
+        float max_containment = (float)edge.second / min(groupName_to_kmerCount[inv_groupNameMap[edge.first.first]], groupName_to_kmerCount[inv_groupNameMap[edge.first.second]]);
+        // myfile << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\t' << max_containment << '\n';
+        myfile << inv_groupNameMap[edge.first.first] << '\t' << inv_groupNameMap[edge.first.second] << '\t' << edge.second << '\t' << max_containment << '\n';
+
+    }
+    myfile.close();
+
+    delete edges;
+
     delete bin_to_hashes;
 }
 
