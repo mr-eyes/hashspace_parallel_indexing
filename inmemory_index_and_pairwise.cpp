@@ -14,6 +14,7 @@
 #include "parallel_hashmap/phmap_dump.h"
 #include "lib.hpp"
 #include "progressbar.hpp"
+#include "argparse.hpp"
 
 using boost::adaptors::transformed;
 using boost::algorithm::join;
@@ -22,17 +23,49 @@ using namespace phmap;
 typedef std::chrono::high_resolution_clock Time;
 
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
 
-    if (argc < 4) {
-        cout << "./index <bins_dir> <out_dir> <min_scale> <cores>" << endl;
-        exit(1);
+    argparse::ArgumentParser program("kSpider_variant");
+    program.add_argument("-b", "--bins-dir")
+        .required()
+        .help("bins directory (should exist).");
+    program.add_argument("-o", "--output-dir")
+        .required()
+        .help("output directory (should exist).");
+    program.add_argument("-s", "--scale")
+        .required()
+        .help("the minimum scale found in the bins")
+        .scan<'i', int>();
+    program.add_argument("-c", "--cores")
+        .required()
+        .help("number of cores")
+        .scan<'i', int>();
+    program.add_argument("-p", "--parts")
+        .required()
+        .help("parts index will split into")
+        .scan<'i', int>();
+
+    try {
+        program.parse_args(argc, argv);
+    }
+    catch (const std::runtime_error& err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << program;
+        std::exit(1);
     }
 
-    string bins_dir = argv[1];
-    string out_dir = argv[2];
-    int min_scale = stoi(argv[3]);
-    int cores = stoi(argv[4]);
+
+
+    // if (argc < 4) {
+    //     cout << "./index <bins_dir> <out_dir> <min_scale> <cores>" << endl;
+    //     exit(1);
+    // }
+
+    string bins_dir = program.get<std::string>("-b");
+    string out_dir = program.get<std::string>("-o");
+    int min_scale = program.get<int>("-s"); 
+    int cores = program.get<int>("-c");
+    int split_parts = program.get<int>("-p");
     int indexing_cores = (int)(0.9 * cores);
     int pairwise_cores = cores - indexing_cores;
     int loading_cores = (int)(cores * 0.5);
@@ -43,7 +76,7 @@ int main(int argc, char** argv) {
 
     uint64_t max_hash = UINT64_MAX / (uint64_t)min_scale;
 
-    auto ranges = splitted_ranges(max_hash, cores);
+    auto ranges = splitted_ranges(max_hash, split_parts);
 
     int kSize = 21;
 
@@ -220,7 +253,7 @@ int main(int argc, char** argv) {
                 if (!___conversion___) {
                     for (auto& [_ID, _NAME] : namesmap) {
                         groupID_to_kmerCount[_ID] = groupName_to_kmerCount[_NAME];
-                        ~___conversion___;
+                        ___conversion___ = true;
                     }
                 }
             }
