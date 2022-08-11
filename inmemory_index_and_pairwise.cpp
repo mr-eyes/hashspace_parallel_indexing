@@ -214,7 +214,13 @@ int main(int argc, char** argv) {
         }
     }
 
-
+    // Loading all bins
+    cout << endl;
+    progressbar totalbar(cores * 2);
+    totalbar.set_todo_char(" ");
+    totalbar.set_done_char("█");
+    totalbar.set_opening_bracket_char("[");
+    totalbar.set_closing_bracket_char("]");
 
 #pragma omp parallel num_threads(cores)
     {
@@ -255,8 +261,10 @@ int main(int argc, char** argv) {
 
 
 
+
 #pragma omp critical
             {
+                totalbar.update();
                 if (!___conversion___) {
                     for (auto& [_ID, _NAME] : namesmap) {
                         groupID_to_kmerCount[_ID] = groupName_to_kmerCount[_NAME];
@@ -264,12 +272,6 @@ int main(int argc, char** argv) {
                     }
                 }
             }
-
-
-
-
-
-
 
             /*
                     __   __        ___
@@ -296,8 +298,11 @@ int main(int argc, char** argv) {
                 inv_groupNameMap,
                 1 // cores
             );
-
             delete legend;
+
+
+#pragma omp critical
+            totalbar.update();
 
             /*
                      __   __        ___
@@ -307,8 +312,6 @@ int main(int argc, char** argv) {
              */
 
              // TODO Merging pairwise
-
-
 
         }
     }
