@@ -222,13 +222,21 @@ int main(int argc, char** argv) {
     totalbar.set_opening_bracket_char("[");
     totalbar.set_closing_bracket_char("]");
 
-#pragma omp parallel num_threads(cores)
-    {
-#pragma omp for
+    int thread_num_1, num_threads_1, start_1, end_1, vec_i_1;
+    int n_1 = ranges.size();
+    omp_set_num_threads(cores);
 
-        for (int i = 0; i < ranges.size(); i++) {
-            uint64_t from_hash = get<0>(ranges[i]);
-            uint64_t to_hash = get<1>(ranges[i]);
+#pragma omp parallel private(vec_i_1,thread_num_1,num_threads_1,start_1,end_1)
+    {
+
+        thread_num_1 = omp_get_thread_num();
+        num_threads_1 = omp_get_num_threads();
+        start_1 = thread_num_1 * n_1 / num_threads_1;
+        end_1 = (thread_num_1 + 1) * n_1 / num_threads_1;
+
+        for(vec_i_1 = start_1; vec_i_1 != end_1; ++vec_i_1) {
+            uint64_t from_hash = get<0>(ranges[vec_i_1]);
+            uint64_t to_hash = get<1>(ranges[vec_i_1]);
 
             // cout << "from hash: " << to_string(from_hash) << endl;
             // cout << "to hash: " << to_string(to_hash) << endl;
