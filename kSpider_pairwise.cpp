@@ -9,6 +9,7 @@
 #include <ctime>
 #include <lib.hpp>
 #include<omp.h>
+#include "progressbar.hpp"
 
 
 using boost::adaptors::transformed;
@@ -46,7 +47,12 @@ void pairwise(
     int n = vec_color_to_ids.size();
 
     omp_set_num_threads(user_threads);
-    begin_time = Time::now();
+
+    progressbar bar((omp_get_thread_num() + 1) * n / omp_get_num_threads());
+    bar.set_todo_char(" ");
+    bar.set_done_char("█");
+    bar.set_opening_bracket_char("{");
+    bar.set_closing_bracket_char("}");
 
 #pragma omp parallel private(vec_i,thread_num,num_threads,start,end)
     {
@@ -69,22 +75,20 @@ void pairwise(
                 auto _p = make_pair(_seq1, _seq2);
                 uint32_t ccount = colorsCount[item.first];
 
-                // edges->insert_or_assign(_p, ccount);// += ccount;
 
                 edges->try_emplace_l(_p,
                     [ccount](PAIRS_COUNTER::value_type& v) { v.second += ccount; },           // called only when key was already present
                     ccount
                 );
-
-                // edges->try_emplace_l(_p,
-                //     [ccount](PAIRS_COUNTER::value_type& v) { v.second+= ccount; }, // called only when key was already present
-                //     [_p, ccount](const PAIRS_COUNTER::constructor& ctor) {
-                //         ctor(_p, ccount); }
-                //     );
-
             }
+#pragma omp critical
+            bar.update();
         }
     }
+
+    cout << endl;
+    cout << endl;
+
 
     std::ofstream myfile;
     myfile.open(index_prefix + "_kSpider_pairwise.tsv");

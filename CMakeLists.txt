@@ -37,6 +37,15 @@ add_executable (pairwise_inmemory lib.cpp inmemory_index_and_pairwise.cpp modifi
 target_link_libraries (pairwise_inmemory kProcessor z)
 target_include_directories(pairwise_inmemory INTERFACE ${kProcessor_INCLUDE_PATH})
 
+add_executable (index_and_pairwise_single lib.cpp index_and_pairwise_single.cpp modified_index.cpp kSpider_pairwise.cpp)
+target_link_libraries (index_and_pairwise_single kProcessor z)
+target_include_directories(index_and_pairwise_single INTERFACE ${kProcessor_INCLUDE_PATH})
+
+
+add_executable (ranged_index lib.cpp ranged_index.cpp)
+target_link_libraries (ranged_index kProcessor z)
+target_include_directories(ranged_index INTERFACE ${kProcessor_INCLUDE_PATH})
+
 
 add_executable (histo histogram.cpp lib.cpp)
 target_link_libraries (histo kProcessor z)
@@ -45,3 +54,4 @@ target_include_directories(histo INTERFACE ${kProcessor_INCLUDE_PATH})
 add_executable (bin_compare bin_pairwise.cpp lib.cpp)
 target_link_libraries (bin_compare kProcessor z)
 target_include_directories(bin_compare INTERFACE ${kProcessor_INCLUDE_PATH})
+
