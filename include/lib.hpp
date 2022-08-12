@@ -121,7 +121,7 @@ void inmemory_ranged_index(
     const int& kSize,
     const uint64_t& from_hash,
     const uint64_t& to_hash
-    );
+);
 
 
 void ranged_index(
@@ -132,3 +132,19 @@ void ranged_index(
     const int& kSize,
     const uint64_t& from_hash,
     const uint64_t& to_hash);
+
+void inmemory_ranged_index_single_for_kSPider(
+    phmap::parallel_flat_hash_map<std::string, phmap::flat_hash_set<uint64_t>,
+    phmap::priv::hash_default_hash<std::string>,
+    phmap::priv::hash_default_eq<std::string>,
+    std::allocator<std::pair<const std::string, phmap::flat_hash_set<uint64_t>>>,
+    1,
+    std::mutex>* loaded_bins,
+    flat_hash_map<uint64_t, std::vector<uint32_t>>* legend,
+    flat_hash_map<uint64_t, uint32_t>& colorsCount,
+    flat_hash_map<uint64_t, string>& kSpider_namesmap,
+    const int& kSize,
+    const uint64_t& from_hash,
+    const uint64_t& to_hash,
+    string output_prefix
+);
