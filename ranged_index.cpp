@@ -16,6 +16,8 @@
 #include <ctime>
 #include "parallel_hashmap/phmap_dump.h"
 
+#define LOGGING 1
+
 typedef std::chrono::high_resolution_clock Time;
 using namespace std;
 
@@ -98,8 +100,6 @@ void bins_indexing(string bins_dir, string output_prefix, uint64_t from_hash, ui
         }
     }
 
-    cout << "namesmap construction done..." << endl;
-
 
     // ----------------------------------------------------------------
 
@@ -121,12 +121,14 @@ void bins_indexing(string bins_dir, string output_prefix, uint64_t from_hash, ui
     auto begin_time = Time::now();
     uint_fast64_t current_kmers_numbers = 0;
 
+    phmap::flat_hash_map<uint32_t, uint32_t> kmer_count;
+
     // START
     for (const auto& [bin_basename, bin_path] : basename_to_path) {
         //START
-
+#if LOGGING == 1
         cout << "Processing " << ++processed_bins_count << "/" << total_bins_number << " | " << bin_basename << " ... " << endl;
-
+#endif
         flat_hash_map<uint64_t, uint64_t> convertMap;
 
         string readName = bin_basename;
@@ -144,7 +146,9 @@ void bins_indexing(string bins_dir, string output_prefix, uint64_t from_hash, ui
         phmap::BinaryInputArchive ar_in(bin_path.c_str());
         bin_hashes.phmap_load(ar_in);
 
-        
+        // output kmer count
+        kmer_count[groupNameMap[bin_basename]] = bin_hashes.size();
+
 
         for (const uint64_t& hashed_kmer : bin_hashes) {
             if (!(from_hash <= hashed_kmer && hashed_kmer < to_hash)) continue;
@@ -219,6 +223,8 @@ void bins_indexing(string bins_dir, string output_prefix, uint64_t from_hash, ui
             }
 
         }
+
+#if LOGGING == 1
         auto loop_time_secs = std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000;
         cout << "   loaded_kmers      " << bin_hashes.size() << endl;
         cout << "   uniq_added_kmers: " << frame->size() - current_kmers_numbers << endl;
@@ -227,35 +233,43 @@ void bins_indexing(string bins_dir, string output_prefix, uint64_t from_hash, ui
         cout << "   loop_time:        " << loop_time_secs << " secs" << endl;
         cout << "--------" << endl;
         current_kmers_numbers = frame->size();
-
+#endif
         // END
 
     }
+    delete frame;
 
+#if LOGGING == 1
+    cout << endl << endl;
+    cout << "saving results ..." << endl;
+    begin_time = Time::now();
     cout << "Indexing done!" << endl;
     cout << "dumping results ..." << endl;
-    // auto color_to_sources = new phmap::flat_hash_map<uint64_t, phmap::flat_hash_set<uint32_t>>();
-    // for (auto it : *legend) {
-    //     phmap::flat_hash_set<uint32_t> tmp(std::make_move_iterator(it.second.begin()), std::make_move_iterator(it.second.end()));
-    //     color_to_sources->operator[](it.first) = tmp;
-    // }
-
-
-    colorTable* colors = new intVectorsTable();
+#endif
+    auto color_to_sources = new phmap::flat_hash_map<uint64_t, phmap::flat_hash_set<uint32_t>>();
     for (auto it : *legend) {
-        colors->setColor(it.first, it.second);
+        phmap::flat_hash_set<uint32_t> tmp(std::make_move_iterator(it.second.begin()), std::make_move_iterator(it.second.end()));
+        color_to_sources->operator[](it.first) = tmp;
     }
 
-    colored_kDataFrame* res = new colored_kDataFrame();
-    res->setColorTable(colors);
-    res->setkDataFrame(frame);
-    for (auto iit = namesMap.begin(); iit != namesMap.end(); iit++) {
-        uint32_t sampleID = groupNameMap[iit->second];
-        res->namesMap[sampleID] = iit->second;
-        res->namesMapInv[iit->second] = sampleID;
+    phmap::BinaryOutputArchive ar_out_1(string(output_prefix + "_color_to_sources.bin").c_str());
+    ar_out_1.saveBinary(color_to_sources->size());
+    for (auto& [k, v] : *color_to_sources)
+    {
+        ar_out_1.saveBinary(k);
+        ar_out_1.saveBinary(v);
     }
-    cout << "saving to " << dir_prefix << " ..." << endl;
-    res->save(output_prefix);
+
+    phmap::BinaryOutputArchive ar_out_2(string(output_prefix + "_kmer_count.bin").c_str());
+    kmer_count.phmap_dump(ar_out_2);
+
+    phmap::BinaryOutputArchive ar_out_3(string(output_prefix + "_color_count.bin").c_str());
+    colorsCount.phmap_dump(ar_out_3);
+
+#if LOGGING == 1
+    auto dumping_time = std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000;
+    cout << "Done saving results with prefix (" << output_prefix << ") in " << dumping_time << " secs." << endl;
+#endif
 }
 
 
@@ -265,13 +279,12 @@ int main(int argc, char** argv) {
         cout << "run: ./ranged_index <bins_dir> <output_prefix> <this_part> <total_parts> <scale>" << endl;
         exit(1);
     }
+
     string bins_dir = argv[1];
     string output_prefix = argv[2];
     uint64_t this_part = to_uint64_t(argv[3]);
     uint64_t total_parts = to_uint64_t(argv[4]);
     uint64_t scale = to_uint64_t(argv[5]);
-
-
 
 
     if (this_part <= 0) {
@@ -284,15 +297,17 @@ int main(int argc, char** argv) {
     uint64_t from_hash = get<0>(ranges[this_part - 1]);
     uint64_t to_hash = get<1>(ranges[this_part - 1]);
 
+#if LOGGING == 1
     cout << "This run: " << endl;
-    cout << "from hash: " << to_string(from_hash) << endl;
-    cout << "to hash: " << to_string(to_hash) << endl; 
+    cout << "\t\t- from hash: " << to_string(from_hash) << endl;
+    cout << "\t\t- to hash: " << to_string(to_hash) << endl;
     cout << "--------------------------" << endl;
+#endif
 
-    for(int i =0; i < ranges.size(); i++){
-        cout << i << "- " << "from("<< to_string(get<0>(ranges[i])) <<") ->> to("<< to_string(get<1>(ranges[i])) <<")" << endl; 
-    }
-
-
-    // bins_indexing(bins_dir, output_prefix, from_hash, to_hash);
+    auto begin_time = Time::now();
+    bins_indexing(bins_dir, output_prefix, from_hash, to_hash);
+#if LOGGING == 1
+    auto total = std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000;
+    cout << "======================\n DONE PROCESSING PART " << this_part << "/" << total_parts << " in " << total << " secs." << endl;
+#endif
 }
