@@ -855,3 +855,211 @@ void inmemory_ranged_index_single_for_kSPider(
     delete frame;
     delete res;
 }
+
+
+void ranged_index_new(BINS_PHMAP* bins_to_hashes, string output_prefix, uint64_t from_hash, uint64_t to_hash, int part_id, flat_hash_map<string, uint32_t>& groupNameMap) {
+
+    kDataFrame* frame;
+
+    flat_hash_map<string, string> namesMap;
+    flat_hash_map<string, uint64_t> tagsMap;
+
+    auto* legend = new phmap::parallel_flat_hash_map<uint64_t, std::vector<uint32_t>>();
+
+    flat_hash_map<uint64_t, uint64_t> colorsCount;
+    uint64_t readID = 0, groupID = 1;
+    string seqName, groupName;
+    string line;
+    priority_queue<uint64_t, vector<uint64_t>, std::greater<uint64_t>> freeColors;
+    flat_hash_map<string, uint64_t> groupCounter;
+    int detected_kSize = 0;
+
+    int total_bins_number = 0;
+    frame = new kDataFramePHMAP(31, mumur_hasher);
+
+    flat_hash_map<string, string> basename_to_path;
+
+
+    for (const auto& [bin_basename, bin_hashes] : *bins_to_hashes) {
+
+        total_bins_number++;
+
+        seqName = bin_basename;
+        groupName = bin_basename;
+
+        namesMap.insert(make_pair(seqName, groupName));
+        auto it = groupNameMap.find(groupName);
+        groupCounter[groupName]++;
+        if (it == groupNameMap.end()) {
+            groupNameMap.insert(make_pair(groupName, groupID));
+            tagsMap.insert(make_pair(to_string(groupID), groupID));
+            vector<uint32_t> tmp;
+            tmp.clear();
+            tmp.push_back(groupID);
+            legend->insert(make_pair(groupID, tmp));
+            colorsCount.insert(make_pair(groupID, 0));
+            groupID++;
+        }
+    }
+
+
+    // ----------------------------------------------------------------
+
+
+    flat_hash_map<uint64_t, string> inv_groupNameMap;
+    for (auto& _ : groupNameMap)
+        inv_groupNameMap[_.second] = _.first;
+
+
+    int currIndex = 0;
+    string kmer;
+    uint64_t tagBits = 0;
+    uint64_t maxTagValue = (1ULL << tagBits) - 1;
+
+    uint64_t lastTag = 0;
+    readID = 0;
+
+    int processed_bins_count = 0;
+    auto begin_time = Time::now();
+    uint_fast64_t current_kmers_numbers = 0;
+
+
+    // START
+    for (const auto& [bin_basename, bin_hashes] : *bins_to_hashes) {
+        //START
+#ifdef LOGGING
+        cout << "Processing " << ++processed_bins_count << "/" << total_bins_number << " | " << bin_basename << " ... " << endl;
+#endif
+        flat_hash_map<uint64_t, uint64_t> convertMap;
+
+        string readName = bin_basename;
+        string groupName = bin_basename;
+
+        uint64_t readTag = groupNameMap.find(groupName)->second;
+
+
+        convertMap.clear();
+        convertMap.insert(make_pair(0, readTag));
+        convertMap.insert(make_pair(readTag, readTag));
+
+        begin_time = Time::now();
+
+        for (const uint64_t& hashed_kmer : bin_hashes) {
+            if (!(from_hash <= hashed_kmer && hashed_kmer < to_hash)) continue;
+            uint64_t currentTag = frame->getCount(hashed_kmer);
+            auto itc = convertMap.find(currentTag);
+            if (itc == convertMap.end()) {
+                vector<uint32_t> colors = legend->find(currentTag)->second;
+                auto tmpiT = find(colors.begin(), colors.end(), readTag);
+                if (tmpiT == colors.end()) {
+                    colors.push_back(readTag);
+                    sort(colors.begin(), colors.end());
+                }
+
+                string colorsString = to_string(colors[0]);
+                for (int k = 1; k < colors.size(); k++) {
+                    colorsString += ";" + to_string(colors[k]);
+                }
+
+                auto itTag = tagsMap.find(colorsString);
+                if (itTag == tagsMap.end()) {
+                    uint64_t newColor;
+                    if (freeColors.size() == 0) {
+                        newColor = groupID++;
+                    }
+                    else {
+                        newColor = freeColors.top();
+                        freeColors.pop();
+                    }
+
+                    tagsMap.insert(make_pair(colorsString, newColor));
+                    legend->insert(make_pair(newColor, colors));
+                    itTag = tagsMap.find(colorsString);
+                    colorsCount[newColor] = 0;
+                }
+                uint64_t newColor = itTag->second;
+
+                convertMap.insert(make_pair(currentTag, newColor));
+                itc = convertMap.find(currentTag);
+            }
+
+            if (itc->second != currentTag) {
+
+                colorsCount[currentTag]--;
+                if (colorsCount[currentTag] == 0 && currentTag != 0) {
+
+                    auto _invGroupNameIT = inv_groupNameMap.find(currentTag);
+                    if (_invGroupNameIT == inv_groupNameMap.end()) {
+                        freeColors.push(currentTag);
+                        vector<uint32_t> colors = legend->find(currentTag)->second;
+                        string colorsString = to_string(colors[0]);
+                        for (int k = 1; k < colors.size(); k++) {
+                            colorsString += ";" + to_string(colors[k]);
+                        }
+                        tagsMap.erase(colorsString);
+                        legend->erase(currentTag);
+                        if (convertMap.find(currentTag) != convertMap.end())
+                            convertMap.erase(currentTag);
+                    }
+
+                }
+                colorsCount[itc->second]++;
+            }
+
+            frame->setCount(hashed_kmer, itc->second);
+        }
+        readID += 1;
+        groupCounter[groupName]--;
+        if (colorsCount[readTag] == 0) {
+            if (groupCounter[groupName] == 0) {
+                freeColors.push(readTag);
+                legend->erase(readTag);
+            }
+        }
+
+#ifdef LOGGING
+        auto loop_time_secs = std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000;
+        cout << "   loaded_kmers      " << bin_hashes.size() << endl;
+        cout << "   uniq_added_kmers: " << frame->size() - current_kmers_numbers << endl;
+        cout << "   total_kmers       " << frame->size() << " | load_factor: " << frame->load_factor() << endl;
+        cout << "   total_colors      " << legend->size() << " | load_factor: " << legend->load_factor() << endl;
+        cout << "   loop_time:        " << loop_time_secs << " secs" << endl;
+        cout << "--------" << endl;
+        current_kmers_numbers = frame->size();
+#endif
+        // END
+
+    }
+    delete frame;
+
+#ifdef LOGGING
+    cout << endl << endl;
+    cout << "saving results ..." << endl;
+    begin_time = Time::now();
+    cout << "Indexing done!" << endl;
+    cout << "dumping results ..." << endl;
+#endif
+    auto color_to_sources = new phmap::flat_hash_map<uint64_t, phmap::flat_hash_set<uint32_t>>();
+    for (auto it : *legend) {
+        phmap::flat_hash_set<uint32_t> tmp(std::make_move_iterator(it.second.begin()), std::make_move_iterator(it.second.end()));
+        color_to_sources->operator[](it.first) = tmp;
+    }
+
+    string part_name = "part" + to_string(part_id);
+
+    phmap::BinaryOutputArchive ar_out_1(string(output_prefix + "_color_to_sources." + part_name + ".bin").c_str());
+    ar_out_1.saveBinary(color_to_sources->size());
+    for (auto& [k, v] : *color_to_sources)
+    {
+        ar_out_1.saveBinary(k);
+        ar_out_1.saveBinary(v);
+    }
+
+    phmap::BinaryOutputArchive ar_out_3(string(output_prefix + "_color_count." + part_name + ".bin").c_str());
+    colorsCount.phmap_dump(ar_out_3);
+
+#ifdef LOGGING
+    auto dumping_time = std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000;
+    cout << "Done saving results with prefix (" << output_prefix << ") in " << dumping_time << " secs." << endl;
+#endif
+}

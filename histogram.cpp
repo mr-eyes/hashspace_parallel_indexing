@@ -15,17 +15,6 @@
 
 using namespace std;
 
-inline uint64_t to_uint64_t(std::string const& value) {
-    uint64_t result = 0;
-    char const* p = value.c_str();
-    char const* q = p + value.size();
-    while (p < q) {
-        result *= 10;
-        result += *(p++) - '0';
-    }
-    return result;
-}
-
 int main(int argc, char** argv) {
     if (argc < 4) {
         cout << "./histogram <bins_dir> <min_scale> <cores>" << endl;

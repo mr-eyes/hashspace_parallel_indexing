@@ -42,7 +42,7 @@ target_link_libraries (index_and_pairwise_single kProcessor z)
 target_include_directories(index_and_pairwise_single INTERFACE ${kProcessor_INCLUDE_PATH})
 
 
-add_executable (ranged_index lib.cpp ranged_index.cpp)
+add_executable (ranged_index lib.cpp modified_index.cpp ranged_index.cpp)
 target_link_libraries (ranged_index kProcessor z)
 target_include_directories(ranged_index INTERFACE ${kProcessor_INCLUDE_PATH})
 
@@ -57,3 +57,13 @@ target_include_directories(bin_compare INTERFACE ${kProcessor_INCLUDE_PATH})
 add_executable (ranged_pairwise lib.cpp ranged_pairwise.cpp)
 target_link_libraries (ranged_pairwise kProcessor z)
 target_include_directories(ranged_pairwise INTERFACE ${kProcessor_INCLUDE_PATH})
+
+add_executable (combine_pairwise lib.cpp combine_pairwise.cpp)
+target_link_libraries (combine_pairwise kProcessor z)
+target_include_directories(combine_pairwise INTERFACE ${kProcessor_INCLUDE_PATH})
+
+
+
+add_executable (inmemory_batch_splitted_index lib.cpp modified_index.cpp inmemory_batch_splitted_index.cpp)
+target_link_libraries (inmemory_batch_splitted_index kProcessor z)
+target_include_directories(inmemory_batch_splitted_index INTERFACE ${kProcessor_INCLUDE_PATH})

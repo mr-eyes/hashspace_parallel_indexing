@@ -12,8 +12,14 @@
 #include<omp.h>
 #include <queue>
 #include <glob.h>
+#include "parallel_hashmap/phmap_dump.h"
+#include "progressbar.hpp"
 
-// using PAIRS_COUNTER = phmap::parallel_flat_hash_map<std::pair<uint32_t, uint32_t>, std::uint64_t, boost::hash<pair<uint32_t, uint32_t>>, std::equal_to<std::pair<uint32_t, uint32_t>>, std::allocator<std::pair<const std::pair<uint32_t, uint32_t>, uint32_t>>, 12, std::mutex>;
+typedef std::chrono::high_resolution_clock Time;
+
+// #ifndef LOGGING 
+// #define LOGGING 1
+// #endif 
 
 using PAIRS_COUNTER = phmap::parallel_flat_hash_map<
     std::pair<uint32_t, uint32_t>,
@@ -22,11 +28,26 @@ using PAIRS_COUNTER = phmap::parallel_flat_hash_map<
     std::equal_to<std::pair<uint32_t, uint32_t>>,
     std::allocator<std::pair<const std::pair<uint32_t, uint32_t>, uint64_t>>, 12, std::mutex>;
 
+using BINS_PHMAP = phmap::parallel_flat_hash_map<std::string, phmap::flat_hash_set<uint64_t>,
+    phmap::priv::hash_default_hash<std::string>,
+    phmap::priv::hash_default_eq<std::string>,
+    std::allocator<std::pair<const std::string, phmap::flat_hash_set<uint64_t>>>,
+    1,
+    std::mutex>;
+
+using BINS_KMER_COUNT = phmap::parallel_flat_hash_map<std::string, uint32_t,
+    phmap::priv::hash_default_hash<std::string>,
+    phmap::priv::hash_default_eq<std::string>,
+    std::allocator<std::pair<const std::string, uint32_t>>,
+    1,
+    std::mutex>;
 
 
 using int_int_map = phmap::parallel_flat_hash_map<uint32_t, uint32_t, std::hash<uint32_t>, std::equal_to<uint32_t>, std::allocator<std::pair<const uint32_t, uint32_t>>, 1>;
 using int_vec_map = phmap::parallel_flat_hash_map<uint32_t, vector<uint32_t>, std::hash<uint32_t>, std::equal_to<uint32_t>, std::allocator<std::pair<const uint32_t, vector<uint32_t>>>, 1>;
 
+
+uint64_t to_uint64_t(std::string const& value);
 
 class Combo {
 
@@ -148,3 +169,15 @@ void inmemory_ranged_index_single_for_kSPider(
     const uint64_t& to_hash,
     string output_prefix
 );
+
+
+void ranged_index_new(BINS_PHMAP* bins_to_hashes,
+    string output_prefix,
+    uint64_t from_hash,
+    uint64_t to_hash,
+    int part_id,
+    flat_hash_map<string, uint32_t> & groupNameMap
+);
+
+
+void load_all_bins(string bins_dir, BINS_PHMAP* bin_to_hashes, BINS_KMER_COUNT* groupName_to_kmerCount, int cores);

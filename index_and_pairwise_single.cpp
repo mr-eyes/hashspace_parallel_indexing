@@ -14,7 +14,6 @@
 #include "parallel_hashmap/phmap_dump.h"
 #include "lib.hpp"
 #include "progressbar.hpp"
-// #include "argparse.hpp"
 
 using boost::adaptors::transformed;
 using boost::algorithm::join;
@@ -22,16 +21,6 @@ using namespace std;
 using namespace phmap;
 typedef std::chrono::high_resolution_clock Time;
 
-inline uint64_t to_uint64_t(std::string const& value) {
-    uint64_t result = 0;
-    char const* p = value.c_str();
-    char const* q = p + value.size();
-    while (p < q) {
-        result *= 10;
-        result += *(p++) - '0';
-    }
-    return result;
-}
 
 int main(int argc, char** argv) {
 

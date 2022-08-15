@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
     auto all_files = fetch(bins_dir + "/*");
     bin_to_hashes->reserve(all_files.size());
 
-    cout << "Loading all files and counting hashing using " << cores << " cores..." << endl;
+    cout << "Loading all files and counting hashes using " << cores << " cores..." << endl;
 
     // Loading all bins
     progressbar bar(all_files.size());

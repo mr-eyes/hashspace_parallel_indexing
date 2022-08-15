@@ -10,6 +10,17 @@
 
 using namespace std;
 
+uint64_t to_uint64_t(std::string const& value) {
+    uint64_t result = 0;
+    char const* p = value.c_str();
+    char const* q = p + value.size();
+    while (p < q) {
+        result *= 10;
+        result += *(p++) - '0';
+    }
+    return result;
+}
+
 vector<tuple<uint64_t, uint64_t>> splitted_ranges(uint64_t max_hash, int cores) {
     vector<tuple<uint64_t, uint64_t>> ranges;
     uint64_t from_hash = 0;
@@ -57,4 +68,60 @@ vector<file_info> fetch(const std::string& pattern) {
 
     // done
     return filenames;
+}
+
+
+void load_all_bins(string bins_dir, BINS_PHMAP* bin_to_hashes, BINS_KMER_COUNT * groupName_to_kmerCount, int cores) {
+    auto all_files = fetch(bins_dir + "/*.bin");
+    bin_to_hashes->reserve(all_files.size());
+    groupName_to_kmerCount->reserve(all_files.size());
+
+#if LOGGING == 1
+    progressbar bar(all_files.size());
+    bar.set_todo_char(" ");
+    bar.set_done_char("█");
+    bar.set_opening_bracket_char("{");
+    bar.set_closing_bracket_char("}");
+#endif
+#pragma omp parallel num_threads(cores)
+    {
+#pragma omp for
+        for (int x = 0; x < all_files.size(); x++) {
+            const auto& file = all_files[x];
+            size_t lastindex = file.path.find_last_of(".");
+
+            std::string::size_type idx;
+            idx = file.path.rfind('.');
+            std::string extension = "";
+
+            if (idx != std::string::npos) extension = file.path.substr(idx + 1);
+            if (extension != "bin") {
+                cerr << "skipping " << file.path << " does not have extension .bin" << endl;
+                continue;
+            }
+
+            phmap::flat_hash_set<uint64_t> bin_hashes;
+            phmap::BinaryInputArchive ar_in(file.path.c_str());
+            bin_hashes.phmap_load(ar_in);
+
+            auto bin_size = bin_hashes.size();
+            auto _basename = file.base_name;
+
+            groupName_to_kmerCount->try_emplace_l(_basename,
+                [](BINS_KMER_COUNT::value_type& v) {},
+                bin_size
+            );
+
+            bin_to_hashes->try_emplace_l(_basename,
+                [](BINS_PHMAP::value_type& v) {},
+                bin_hashes
+            );
+
+#if LOGGING == 1
+#pragma omp critical
+            bar.update();
+#endif
+
+        }
+    }
 }
