@@ -114,7 +114,11 @@ int main(int argc, char** argv) {
 
     cout << endl;
 
-
+    std::ofstream metadata;
+    metadata.open(output_prefix + ".metadata");
+    metadata << "scale," << to_string(scale) << "\n";
+    metadata << "parts," << to_string(total_parts) << "\n";
+    metadata.close();
 
 #ifdef LOGGING
     auto total = std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000;
