@@ -98,22 +98,29 @@ void load_colors_to_sources(const std::string& filename, phmap::flat_hash_map<ui
 
 int main(int argc, char** argv) {
     string input_prefix = argv[1];
-    int cores = stoi(argv[2]);
+    int part_id = stoi(argv[2]);
+    int cores = stoi(argv[3]);
+
+    string part_name = "part" + to_string(part_id);
+    string _file_name_to_id = input_prefix + "_id_to_name.tsv";
+    string _file_id_to_kmer_count = input_prefix + "_groupID_to_kmerCount.bin";
+    string _file_color_to_sources = input_prefix + "_color_to_sources." + part_name + ".bin";
+    string _file_color_to_count = input_prefix + "_color_count." + part_name + ".bin";
 
     // Loading all data
     cout << "Loading binaries ... ";
     auto begin_time = Time::now();
     auto* colors_to_sources = new phmap::flat_hash_map<uint64_t, phmap::flat_hash_set<uint32_t>>();
-    load_colors_to_sources(input_prefix + "_color_to_sources.bin", colors_to_sources);
+    load_colors_to_sources(_file_color_to_sources, colors_to_sources);
     assert(colors_to_sources->size());
 
     phmap::flat_hash_map<uint32_t, uint32_t> kmerCount;
-    phmap::BinaryInputArchive ar_in_kmer_count(string(input_prefix + "_kmer_count.bin").c_str());
+    phmap::BinaryInputArchive ar_in_kmer_count(_file_id_to_kmer_count.c_str());
     kmerCount.phmap_load(ar_in_kmer_count);
     assert(kmerCount.size());
 
     flat_hash_map<uint64_t, uint64_t> colorsCount;
-    phmap::BinaryInputArchive ar_in_colorsCount(string(input_prefix + "_color_count.bin").c_str());
+    phmap::BinaryInputArchive ar_in_colorsCount(_file_color_to_count.c_str());
     colorsCount.phmap_load(ar_in_colorsCount);
     assert(colorsCount.size());
     auto load_time = std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000;
@@ -130,7 +137,7 @@ int main(int argc, char** argv) {
     cout << "Done in " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs." << endl << endl;
 
     // Dumping pairwise result
-    phmap::BinaryOutputArchive ar_out_1(string(input_prefix + "_pairwise.bin").c_str());
+    phmap::BinaryOutputArchive ar_out_1(string(input_prefix + "_pairwise." + part_name + ".bin").c_str());
     ar_out_1.saveBinary(edges->size());
     for (auto& [k, v] : *edges)
     {
