@@ -71,18 +71,15 @@ vector<file_info> fetch(const std::string& pattern) {
 }
 
 
-void load_all_bins(string bins_dir, BINS_PHMAP* bin_to_hashes, BINS_KMER_COUNT * groupName_to_kmerCount, int cores) {
+void load_all_bins(string bins_dir, BINS_PHMAP* bin_to_hashes, BINS_KMER_COUNT* groupName_to_kmerCount, int cores) {
     auto all_files = fetch(bins_dir + "/*.bin");
     bin_to_hashes->reserve(all_files.size());
     groupName_to_kmerCount->reserve(all_files.size());
-
-#if LOGGING == 1
     progressbar bar(all_files.size());
     bar.set_todo_char(" ");
     bar.set_done_char("█");
     bar.set_opening_bracket_char("{");
     bar.set_closing_bracket_char("}");
-#endif
 #pragma omp parallel num_threads(cores)
     {
 #pragma omp for
@@ -117,11 +114,8 @@ void load_all_bins(string bins_dir, BINS_PHMAP* bin_to_hashes, BINS_KMER_COUNT *
                 bin_hashes
             );
 
-#if LOGGING == 1
 #pragma omp critical
             bar.update();
-#endif
-
         }
     }
 }
