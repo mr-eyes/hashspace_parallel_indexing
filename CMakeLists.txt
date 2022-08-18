@@ -67,3 +67,8 @@ target_include_directories(combine_pairwise INTERFACE ${kProcessor_INCLUDE_PATH}
 add_executable (inmemory_batch_splitted_index lib.cpp modified_index.cpp inmemory_batch_splitted_index.cpp)
 target_link_libraries (inmemory_batch_splitted_index kProcessor z)
 target_include_directories(inmemory_batch_splitted_index INTERFACE ${kProcessor_INCLUDE_PATH})
+
+
+add_executable (fix_containment fix_containment.cpp)
+target_link_libraries (fix_containment kProcessor z)
+target_include_directories(fix_containment INTERFACE ${kProcessor_INCLUDE_PATH})
