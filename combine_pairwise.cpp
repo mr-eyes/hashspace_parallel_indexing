@@ -4,6 +4,7 @@
 #include <iostream>
 #include <lib.hpp>
 #include <fstream>
+#include "progressbar.hpp"
 
 using namespace std;
 
@@ -52,6 +53,7 @@ inline flat_hash_map<string, int> parse_metadata(string input_prefix) {
 int main(int argc, char** argv) {
 
     string input_prefix = argv[1];
+    int cores = stoi(argv[2]);
 
     auto metadata_map = parse_metadata(input_prefix);
 
@@ -62,24 +64,54 @@ int main(int argc, char** argv) {
     for (int part_id = 1; part_id <= metadata_map["parts"]; part_id++)
         filenames.push_back(input_prefix + "_pairwise.part" + to_string(part_id) + ".bin");
 
-    // for (int i = 0; i < argc - 1; i++)
-    //     filenames.push_back(argv[i + 1]);
+    if (cores > filenames.size()) {
+        cout << "down scaling cores to " << filenames.size();
+        cores = filenames.size();
+    }
+
+    flat_hash_map<uint32_t, uint32_t> group_id_to_kmer_count;
+    {
+        phmap::BinaryInputArchive ar_in(string(input_prefix + "_groupID_to_kmerCount.bin").c_str());
+        group_id_to_kmer_count.phmap_load(ar_in);
+    }
+    assert(group_id_to_kmer_count.size());
+
 
     auto* edges = new PAIRS_COUNTER();
 
+    
 
-    for (auto& filename : filenames) {
-        cout << "Loading " << filename << endl;
-        load_edges(filename, edges);
+    int thread_num_1, num_threads_1, start_1, end_1, vec_i_1;
+    int n_1 = filenames.size();
+    omp_set_num_threads(cores);
+
+    progressbar totalbar(n_1);
+    totalbar.set_todo_char(" ");
+    totalbar.set_done_char("█");
+    totalbar.set_opening_bracket_char("[");
+    totalbar.set_closing_bracket_char("]");
+
+#pragma omp parallel private(vec_i_1,thread_num_1,num_threads_1,start_1,end_1)
+    {
+        thread_num_1 = omp_get_thread_num();
+        num_threads_1 = omp_get_num_threads();
+        start_1 = thread_num_1 * n_1 / num_threads_1;
+        end_1 = (thread_num_1 + 1) * n_1 / num_threads_1;
+
+        for (vec_i_1 = start_1; vec_i_1 != end_1; ++vec_i_1) {
+            auto& filename = filenames[vec_i_1];
+            load_edges(filename, edges);
+            totalbar.update();
+        }
     }
+    cout << endl;
 
     std::ofstream myfile;
     myfile.open(input_prefix + "_kSpider_pairwise.tsv");
     myfile << "bin_1" << '\t' << "bin_2" << '\t' << "shared_kmers" << '\t' << "max_containment" << '\n';
     uint64_t line_count = 0;
     for (const auto& edge : *edges) {
-        float max_containment = 0.0;
-        // float max_containment = (float)edge.second / min(groupName_to_kmerCount[namesmap[edge.first.first]], groupName_to_kmerCount[namesmap[edge.first.second]]);
+        float max_containment = (float)edge.second / min(group_id_to_kmer_count[edge.first.first], group_id_to_kmer_count[edge.first.second]);
         myfile << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\t' << max_containment << '\n';
     }
     myfile.close();
