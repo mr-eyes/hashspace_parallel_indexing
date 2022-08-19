@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 
     auto* edges = new PAIRS_COUNTER();
 
-    
+
 
     int thread_num_1, num_threads_1, start_1, end_1, vec_i_1;
     int n_1 = filenames.size();
@@ -117,5 +117,6 @@ int main(int argc, char** argv) {
     myfile.close();
 
     cout << "loaded " << edges->size() << " edges" << endl;
-
+    std::ofstream metadata(input_prefix + ".metadata", std::ios_base::app | std::ios_base::out);
+    metadata << "edges," << to_string(edges->size()) << "\n";
 }

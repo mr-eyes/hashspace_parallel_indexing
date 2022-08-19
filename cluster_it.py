@@ -15,6 +15,13 @@ id_to_name_file = input_prefix + "_id_to_name.tsv"
 CONTAINMENT_THRESHOLD = float(args.cutoff)
 output = input_prefix + f"_kSpider_clusters_{CONTAINMENT_THRESHOLD}%.tsv"
 
+no_edges = 0
+with open(input_prefix + ".metadata") as metadata:
+    for line in metadata:
+        line = line.strip().split(',')
+        if line[0] == "edges":
+            no_edges = int(line[1])
+
 # loading id_to_group_name
 id_to_name = {}
 with open(id_to_name_file) as F:
@@ -26,9 +33,6 @@ with open(id_to_name_file) as F:
 
 distance_col_idx = 3
 
-
-no_lines = 95244
-
 graph = rx.PyGraph()
 nodes_indeces = graph.add_nodes_from(list(id_to_name.keys()))
 
@@ -39,7 +43,7 @@ edges_tuples = []
 print("[i] constructing graph")
 with open(pairwise_file, 'r') as pairwise_tsv:
     next(pairwise_tsv)  # skip header
-    for row in tqdm(pairwise_tsv, total=no_lines):
+    for row in tqdm(pairwise_tsv, total=no_edges):
         row = row.strip().split('\t')
         seq1 = int(row[0]) - 1
         seq2 = int(row[1]) - 1
