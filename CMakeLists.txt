@@ -20,6 +20,10 @@ include_directories("${kProcessor}/ThirdParty/caches/include")
 include_directories("${PROJECT_SOURCE_DIR}/include")
 
 include_directories("${PROJECT_SOURCE_DIR}/lib/progressbar/include")
+include_directories("${PROJECT_SOURCE_DIR}/lib/json_parser/lib/include")
+include_directories("${PROJECT_SOURCE_DIR}/lib/zstr/src")
+
+
 
 # ----------------------------------------------------------------------------
 # END kProcessor Setup
@@ -69,6 +73,6 @@ target_link_libraries (inmemory_batch_splitted_index kProcessor z)
 target_include_directories(inmemory_batch_splitted_index INTERFACE ${kProcessor_INCLUDE_PATH})
 
 
-add_executable (fix_containment fix_containment.cpp)
-target_link_libraries (fix_containment kProcessor z)
-target_include_directories(fix_containment INTERFACE ${kProcessor_INCLUDE_PATH})
+add_executable (sig_to_bin sig_to_bin.cpp)
+target_link_libraries (sig_to_bin kProcessor z)
+target_include_directories(sig_to_bin INTERFACE ${kProcessor_INCLUDE_PATH})
