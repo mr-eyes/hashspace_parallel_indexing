@@ -41,6 +41,10 @@ int main(int argc, char** argv) {
         cores = total_parts;
     }
 
+    /*
+    multi-threaded loading of all signatures and store them in memory.
+    */
+
     // Load all files in memory
     auto* bin_to_hashes = new BINS_PHMAP();
     auto* groupName_to_kmerCount = new BINS_KMER_COUNT();
@@ -112,6 +116,10 @@ int main(int argc, char** argv) {
         totalbar.update();
     }
 
+    /*
+    END loading.
+    */
+
     cout << endl;
 
     std::ofstream metadata;
@@ -122,6 +130,6 @@ int main(int argc, char** argv) {
 
 #ifdef LOGGING
     auto total = std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000;
-    cout << "======================\n DONE PROCESSING PART " << total_parts << " parts in " << total << " secs." << endl;
+    cout << "======================\n DONE PROCESSING " << total_parts << " parts in " << total << " secs." << endl;
 #endif
 }

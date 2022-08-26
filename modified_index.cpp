@@ -1030,7 +1030,11 @@ void ranged_index_new(BINS_PHMAP* bins_to_hashes, string output_prefix, uint64_t
         // END
 
     }
+    string part_name = "part" + to_string(part_id);
+
+    frame->save(output_prefix + "_kmer_to_color." + part_name);
     delete frame;
+    std::remove(string(output_prefix + "_kmer_to_color." + part_name + ".extra").c_str());
 
 #ifdef LOGGING
     cout << endl << endl;
@@ -1045,7 +1049,6 @@ void ranged_index_new(BINS_PHMAP* bins_to_hashes, string output_prefix, uint64_t
         color_to_sources->operator[](it.first) = tmp;
     }
 
-    string part_name = "part" + to_string(part_id);
 
     phmap::BinaryOutputArchive ar_out_1(string(output_prefix + "_color_to_sources." + part_name + ".bin").c_str());
     ar_out_1.saveBinary(color_to_sources->size());
