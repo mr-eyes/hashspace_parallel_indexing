@@ -76,3 +76,7 @@ target_include_directories(inmemory_batch_splitted_index INTERFACE ${kProcessor_
 add_executable (sig_to_bin sig_to_bin.cpp)
 target_link_libraries (sig_to_bin kProcessor z)
 target_include_directories(sig_to_bin INTERFACE ${kProcessor_INCLUDE_PATH})
+
+add_executable (sigs_to_bins sigs_to_bins.cpp)
+target_link_libraries (sigs_to_bins kProcessor z)
+target_include_directories(sigs_to_bins INTERFACE ${kProcessor_INCLUDE_PATH})
