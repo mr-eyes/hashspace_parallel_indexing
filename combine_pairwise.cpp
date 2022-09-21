@@ -108,11 +108,14 @@ int main(int argc, char** argv) {
 
     std::ofstream myfile;
     myfile.open(input_prefix + "_kSpider_pairwise.tsv");
-    myfile << "bin_1" << '\t' << "bin_2" << '\t' << "shared_kmers" << '\t' << "max_containment" << '\n';
+    myfile << "bin_1" << '\t' << "bin_2" << '\t' << "shared_kmers" << '\t' << "max_containment" << '\t' << "avg_containment" << '\n';
     uint64_t line_count = 0;
     for (const auto& edge : *edges) {
         float max_containment = (float)edge.second / min(group_id_to_kmer_count[edge.first.first], group_id_to_kmer_count[edge.first.second]);
-        myfile << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\t' << max_containment << '\n';
+        float min_containment = (float)edge.second / max(group_id_to_kmer_count[edge.first.first], group_id_to_kmer_count[edge.first.second]);
+        float avg_containment = (max_containment + min_containment) / 2.0;
+
+        myfile << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\t' << max_containment << '\t' << avg_containment << '\n';
     }
     myfile.close();
 
