@@ -80,3 +80,11 @@ target_include_directories(sig_to_bin INTERFACE ${kProcessor_INCLUDE_PATH})
 add_executable (sigs_to_bins sigs_to_bins.cpp)
 target_link_libraries (sigs_to_bins kProcessor z)
 target_include_directories(sigs_to_bins INTERFACE ${kProcessor_INCLUDE_PATH})
+
+add_executable (another_index another_index.cpp lib.cpp)
+target_link_libraries (another_index kProcessor z)
+target_include_directories(another_index INTERFACE ${kProcessor_INCLUDE_PATH})
+
+add_executable (kmer_count_to_tsv dump_kmercount.cpp lib.cpp)
+target_link_libraries (kmer_count_to_tsv kProcessor z)
+target_include_directories(kmer_count_to_tsv INTERFACE ${kProcessor_INCLUDE_PATH})
