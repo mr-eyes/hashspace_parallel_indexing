@@ -42,7 +42,7 @@ with open(pairwise_tsv) as ORIGINAL, open(new_pairwise_tsv, 'w') as NEW:
         min_containment = shared_kmers / max(id_to_kmer_count[id_1],id_to_kmer_count[id_2])
         avg_containment = (max_containment + min_containment) / 2
         n_unique_kmers = (id_to_kmer_count[id_1] + id_to_kmer_count[id_2]) / 2
-        ani = to_ani(avg_containment, kSize, metadata_dict["scale"], n_unique_kmers=n_unique_kmers)
+        ani = to_ani(avg_containment, kSize, metadata_dict["scale"], n_unique_kmers=n_unique_kmers).ani
         NEW.write(f"{or_line.strip()}\t{avg_containment}\t{ani}\n")
         
         
