@@ -33,7 +33,7 @@ with open(kmer_count_tsv) as IN:
         
 with open(pairwise_tsv) as ORIGINAL, open(new_pairwise_tsv, 'w') as NEW:
     NEW.write(f"{next(ORIGINAL).strip()}\tavg_containment\tani\n")
-    for or_line in tqdm(ORIGINAL, total=metadata_csv["edges"]):
+    for or_line in tqdm(ORIGINAL, total=metadata_dict["edges"]):
         line = or_line.strip().split('\t')
         id_1 = int(line[0])
         id_2 = int(line[1])
@@ -41,7 +41,7 @@ with open(pairwise_tsv) as ORIGINAL, open(new_pairwise_tsv, 'w') as NEW:
         max_containment = float(line[3])
         min_containment = shared_kmers / max(id_to_kmer_count[id_1],id_to_kmer_count[id_2])
         avg_containment = (max_containment + min_containment) / 2
-        ani = to_ani(avg_containment, kSize, metadata_csv["scale"])
+        ani = to_ani(avg_containment, kSize, metadata_dict["scale"])
         NEW.write(f"{or_line.strip()}\t{avg_containment}\t{ani}\n")
         
         
