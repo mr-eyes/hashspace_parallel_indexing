@@ -2,8 +2,8 @@ from sourmash.distance_utils import containment_to_distance as to_ani
 from tqdm import tqdm
 import sys
 
-if len(sys.argv) < 3:
-    sys.exit("run: python extend_pairwise.py <kmer_count_tsv> <pairwise_tsv>")
+if len(sys.argv) < 2:
+    sys.exit("run: python extend_pairwise.py <index_prefix>")
 
 input_prefix = sys.argv[1]
 
@@ -33,7 +33,7 @@ with open(kmer_count_tsv) as IN:
         
 with open(pairwise_tsv) as ORIGINAL, open(new_pairwise_tsv, 'w') as NEW:
     NEW.write(f"{next(ORIGINAL).strip()}\tavg_containment\tani\n")
-    for or_line in ORIGINAL:
+    for or_line in tqdm(ORIGINAL, total=metadata_csv["edges"]):
         line = or_line.strip().split('\t')
         id_1 = int(line[0])
         id_2 = int(line[1])
