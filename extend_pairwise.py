@@ -51,9 +51,9 @@ with open(pairwise_tsv) as ORIGINAL, open(new_pairwise_tsv, 'w') as NEW:
         shared_kmers = int(line[2])
         max_containment = float(line[3])
         containment_1_in_2 = shared_kmers / id_to_kmer_count[id_2]
-        ani_1_in_2 = 1 - containment_to_distance(containment_1_in_2, kSize, metadata_dict["scale"], n_unique_kmers= id_to_kmer_count[id_2]*metadata_dict["scale"]).ani
+        ani_1_in_2 = containment_to_distance(containment_1_in_2, kSize, metadata_dict["scale"], n_unique_kmers= id_to_kmer_count[id_2]*metadata_dict["scale"]).ani
         containment_2_in_1 = shared_kmers / id_to_kmer_count[id_1]
-        ani_2_in_1 = 1 - containment_to_distance(containment_2_in_1, kSize, metadata_dict["scale"], n_unique_kmers= id_to_kmer_count[id_1]*metadata_dict["scale"]).ani
+        ani_2_in_1 = containment_to_distance(containment_2_in_1, kSize, metadata_dict["scale"], n_unique_kmers= id_to_kmer_count[id_1]*metadata_dict["scale"]).ani
         avg_ani = (ani_1_in_2 + ani_2_in_1) / 2        
         avg_containment = (containment_1_in_2 + containment_2_in_1) / 2
         new_line = f"{id_to_name[id_1]}\t{id_to_name[id_2]}\t{shared_kmers}\t{max_containment}\t{avg_containment}\t{avg_ani}\n"
