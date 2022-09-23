@@ -44,7 +44,7 @@ with open(input_prefix + "_id_to_name.tsv") as TSV:
 with open(pairwise_tsv) as ORIGINAL, open(new_pairwise_tsv, 'w') as NEW:
     next(ORIGINAL)
     NEW.write("bin_1\tbin_2\tshared_kmers\tmax_containment\tavg_containment\tavg_ani\n")
-    for or_line in tqdm(ORIGINAL, total=metadata_dict["edges"]):
+    for or_line in ORIGINAL:
         line = or_line.strip().split('\t')
         id_1 = int(line[0])
         id_2 = int(line[1])
@@ -56,7 +56,7 @@ with open(pairwise_tsv) as ORIGINAL, open(new_pairwise_tsv, 'w') as NEW:
         ani_2_in_1 = containment_to_distance(containment_2_in_1, kSize, metadata_dict["scale"], n_unique_kmers= id_to_kmer_count[id_1]*metadata_dict["scale"]).ani
         avg_ani = (ani_1_in_2 + ani_2_in_1) / 2        
         avg_containment = (containment_1_in_2 + containment_2_in_1) / 2
-        new_line = f"{id_to_name[id_1]}\t{id_to_name[id_2]}\t{shared_kmers}\t{max_containment}\t{avg_containment}\t{avg_ani}\n"
+        new_line = f"{id_1}\t{id_2}\t{shared_kmers}\t{max_containment}\t{avg_containment}\t{avg_ani}\n"
         NEW.write(new_line)
         # NEW.write(f"{or_line.strip()}\t{avg_containment}\t{ani}\n")
         
