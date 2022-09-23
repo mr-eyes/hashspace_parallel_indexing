@@ -9,7 +9,7 @@ input_prefix = sys.argv[1]
 
 kmer_count_tsv = input_prefix + "_groupID_to_kmerCount.tsv"
 pairwise_tsv = input_prefix + "_kSpider_pairwise.tsv"
-new_pairwise_tsv = input_prefix + "_EXTENDED_kSpider_pairwise.tsv"
+new_pairwise_tsv = input_prefix + "_FILTERED_kSpider_pairwise.tsv"
 metadata_csv = input_prefix + ".metadata"
 
 metadata_dict = {}
@@ -46,9 +46,11 @@ with open(pairwise_tsv) as ORIGINAL, open(new_pairwise_tsv, 'w') as NEW:
     NEW.write("bin_1\tbin_2\tshared_kmers\tmax_containment\tavg_containment\tavg_ani\n")
     for or_line in ORIGINAL:
         line = or_line.strip().split('\t')
+        shared_kmers = int(line[2])
+        if shared_kmers < 5:
+            continue
         id_1 = int(line[0])
         id_2 = int(line[1])
-        shared_kmers = int(line[2])
         max_containment = float(line[3])
         containment_1_in_2 = shared_kmers / id_to_kmer_count[id_2]
         ani_1_in_2 = containment_to_distance(containment_1_in_2, kSize, metadata_dict["scale"], n_unique_kmers= id_to_kmer_count[id_2]*metadata_dict["scale"]).ani
