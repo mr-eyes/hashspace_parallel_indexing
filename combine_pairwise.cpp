@@ -110,6 +110,7 @@ int main(int argc, char** argv) {
     string input_prefix = argv[1];
     int cores = stoi(argv[2]);
 #if CALC_ANI
+    cout << "kSize: " << argv[3];
     int kSize = stoi(argv[3]);
 #endif
 
