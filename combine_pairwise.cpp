@@ -165,7 +165,11 @@ int main(int argc, char** argv) {
     cout << endl;
 
     std::ofstream myfile;
+#if CALC_ANI
+    myfile.open(input_prefix + "_kSpider_pairwise_with_ani.tsv");
+#else
     myfile.open(input_prefix + "_kSpider_pairwise.tsv");
+#endif
     myfile
         << "bin_1"
         << '\tbin_2'
