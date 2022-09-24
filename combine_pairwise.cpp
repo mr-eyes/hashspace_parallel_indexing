@@ -88,6 +88,8 @@ inline flat_hash_map<string, int> parse_metadata(string input_prefix) {
 
 int main(int argc, char** argv) {
 
+    cout << "[DEBUG] argc: " << argc << endl;
+
 #if CALC_ANI
     int expected_argc = 4;
 #else
@@ -99,10 +101,8 @@ int main(int argc, char** argv) {
     if (argc != expected_argc) {
 #if CALC_ANI
         cerr << "./combine_pairwise <input_prefix> <cores> <kSize>\n";
-
 #else
         cerr << "./combine_pairwise <input_prefix> <cores>\n";
-
 #endif
         exit(1);
     }
