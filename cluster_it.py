@@ -10,7 +10,8 @@ parser.add_argument('-p', '--prefix', type=str,
 args = parser.parse_args()
 
 input_prefix = args.prefix
-pairwise_file = input_prefix + "_kSpider_pairwise.tsv"
+# pairwise_file = input_prefix + "_kSpider_pairwise.tsv"
+pairwise_file = input_prefix + "_FILTERED_kSpider_pairwise.tsv"
 id_to_name_file = input_prefix + "_id_to_name.tsv"
 CONTAINMENT_THRESHOLD = float(args.cutoff)
 output = input_prefix + f"_kSpider_clusters_{CONTAINMENT_THRESHOLD}%.tsv"
@@ -31,7 +32,7 @@ with open(id_to_name_file) as F:
         id_to_name[int(line[0])] = line[1]
 
 
-distance_col_idx = 3
+distance_col_idx = -1 # avg cont
 
 graph = rx.PyGraph()
 nodes_indeces = graph.add_nodes_from(list(id_to_name.keys()))
