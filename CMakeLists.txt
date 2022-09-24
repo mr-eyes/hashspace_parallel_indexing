@@ -62,10 +62,11 @@ add_executable (ranged_pairwise lib.cpp ranged_pairwise.cpp)
 target_link_libraries (ranged_pairwise kProcessor z)
 target_include_directories(ranged_pairwise INTERFACE ${kProcessor_INCLUDE_PATH})
 
-add_executable (combine_pairwise lib.cpp combine_pairwise.cpp)
-target_link_libraries (combine_pairwise kProcessor z)
-target_include_directories(combine_pairwise INTERFACE ${kProcessor_INCLUDE_PATH})
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+add_executable (combine_pairwise lib.cpp combine_pairwise.cpp)
+target_link_libraries (combine_pairwise kProcessor z Python3::Python)
+target_include_directories(combine_pairwise INTERFACE ${kProcessor_INCLUDE_PATH} ${PYTHON_INCLUDE_DIRS})
 
 
 add_executable (inmemory_batch_splitted_index lib.cpp modified_index.cpp inmemory_batch_splitted_index.cpp)
@@ -80,7 +81,6 @@ target_include_directories(sig_to_bin INTERFACE ${kProcessor_INCLUDE_PATH})
 add_executable (sigs_to_bins sigs_to_bins.cpp)
 target_link_libraries (sigs_to_bins kProcessor z)
 target_include_directories(sigs_to_bins INTERFACE ${kProcessor_INCLUDE_PATH})
-
 
 add_executable (kmer_count_to_tsv dump_kmercount.cpp lib.cpp)
 target_link_libraries (kmer_count_to_tsv kProcessor z)
