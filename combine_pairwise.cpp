@@ -109,13 +109,10 @@ int main(int argc, char** argv) {
     }
 
     string input_prefix = argv[1];
-    string _kSize = "31";
     int cores = stoi(argv[2]);
 #if CALC_ANI
-    cout << "kSize: " << argv[3];
-    _kSize = argv[3];
+    int kSize = stoi(argv[3]);
 #endif
-    int kSize = stoi(_kSize);
     auto metadata_map = parse_metadata(input_prefix);
 
     cout << "detected scale: " << metadata_map["scale"] << endl;
@@ -175,12 +172,12 @@ int main(int argc, char** argv) {
 #endif
     myfile
         << "bin_1"
-        << '\tbin_2'
-        << '\tshared_kmers'
-        << '\tmax_containment'
-        << '\tavg_containment'
+        << "\tbin_2"
+        << "\tshared_kmers"
+        << "\tmax_containment"
+        << "\tavg_containment"
 #if CALC_ANI
-        << '\tavg_ani'
+        << "\tavg_ani"
 #endif
         << '\n';
 
@@ -206,16 +203,16 @@ int main(int argc, char** argv) {
 
         myfile
             << edge.first.first
-            << '\t'
+            << "\t"
             << edge.first.second
-            << '\t'
+            << "\t"
             << edge.second
-            << '\t'
+            << "\t"
             << max_containment
-            << '\t'
+            << "\t"
             << avg_containment
 #if CALC_ANI
-            << '\t' << avg_ani
+            << "\t" << avg_ani
 #endif
             << '\n';
     }
