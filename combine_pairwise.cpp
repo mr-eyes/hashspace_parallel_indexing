@@ -99,6 +99,7 @@ int main(int argc, char** argv) {
 
 
     if (argc != expected_argc) {
+
 #if CALC_ANI
         cerr << "./combine_pairwise <input_prefix> <cores> <kSize>\n";
 #else
@@ -108,12 +109,13 @@ int main(int argc, char** argv) {
     }
 
     string input_prefix = argv[1];
+    string _kSize = "31";
     int cores = stoi(argv[2]);
 #if CALC_ANI
     cout << "kSize: " << argv[3];
-    int kSize = stoi(argv[3]);
+    string _kSize = argv[3];
 #endif
-
+    int kSize = stoi(_kSize);
     auto metadata_map = parse_metadata(input_prefix);
 
     cout << "detected scale: " << metadata_map["scale"] << endl;
