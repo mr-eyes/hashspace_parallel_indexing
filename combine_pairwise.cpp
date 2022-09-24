@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
     int cores = stoi(argv[2]);
 #if CALC_ANI
     cout << "kSize: " << argv[3];
-    string _kSize = argv[3];
+    _kSize = argv[3];
 #endif
     int kSize = stoi(_kSize);
     auto metadata_map = parse_metadata(input_prefix);
