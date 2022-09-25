@@ -44,7 +44,7 @@ edges_tuples = []
 print("[i] constructing graph")
 with open(pairwise_file, 'r') as pairwise_tsv:
     next(pairwise_tsv)  # skip header
-    for row in tqdm(pairwise_tsv, total=no_edges):
+    for row in pairwise_tsv:
         row = row.strip().split('\t')
         seq1 = int(row[0]) - 1
         seq2 = int(row[1]) - 1
