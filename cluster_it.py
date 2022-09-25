@@ -16,12 +16,12 @@ id_to_name_file = input_prefix + "_id_to_name.tsv"
 CONTAINMENT_THRESHOLD = float(args.cutoff)
 output = input_prefix + f"_kSpider_clusters_{CONTAINMENT_THRESHOLD}%.tsv"
 
-no_edges = 0
-with open(input_prefix + ".metadata") as metadata:
-    for line in metadata:
-        line = line.strip().split(',')
-        if line[0] == "edges":
-            no_edges = int(line[1])
+no_edges = 2726667056 #0
+# with open(input_prefix + ".metadata") as metadata:
+#     for line in metadata:
+#         line = line.strip().split(',')
+#         if line[0] == "edges":
+#             no_edges = int(line[1])
 
 # loading id_to_group_name
 id_to_name = {}
