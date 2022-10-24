@@ -1,4 +1,4 @@
-import retworkx as rx
+import rustworkx as rx
 from tqdm import tqdm
 import argparse
 
