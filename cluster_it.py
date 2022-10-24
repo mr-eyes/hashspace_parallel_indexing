@@ -16,7 +16,9 @@ id_to_name_file = input_prefix + "_id_to_name.tsv"
 CONTAINMENT_THRESHOLD = float(args.cutoff)
 output = input_prefix + f"_kSpider_clusters_{CONTAINMENT_THRESHOLD}%.tsv"
 
-no_edges = 2726667056 #0
+no_edges = 2726667056 #gtdb
+no_edges = 6928010548 #nasa
+
 # with open(input_prefix + ".metadata") as metadata:
 #     for line in metadata:
 #         line = line.strip().split(',')
@@ -32,8 +34,8 @@ with open(id_to_name_file) as F:
         id_to_name[int(line[0])] = line[1]
 
 
-# distance_col_idx = -1 # avg ani
-distance_col_idx = -2 # avg cont
+distance_col_idx = -1 # avg ani
+# distance_col_idx = -2 # avg cont
 
 graph = rx.PyGraph()
 nodes_indeces = graph.add_nodes_from(list(id_to_name.keys()))
