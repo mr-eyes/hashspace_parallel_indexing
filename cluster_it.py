@@ -16,8 +16,9 @@ id_to_name_file = input_prefix + "_id_to_name.tsv"
 CONTAINMENT_THRESHOLD = float(args.cutoff)
 output = input_prefix + f"_kSpider_clusters_{CONTAINMENT_THRESHOLD}%.tsv"
 
-no_edges = 2726667056 #gtdb
-no_edges = 6928010548 #nasa
+# no_edges = 2726667056 #gtdb
+# no_edges = 6928010548 #nasa_no_filtering
+no_edges = 5371116604 #nasa
 
 # with open(input_prefix + ".metadata") as metadata:
 #     for line in metadata:
