@@ -23,7 +23,7 @@ with open(metadata_csv) as CSV:
         metadata_dict[line[0]] = int(line[1])
 
 
-print(f"processing with: scale={metadata_dict['scale']}, kSize={kSize}, #pairwise_comparisons={metadata_dict['edges']}")
+print(f"processing with: scale={metadata_dict['scale']}, kSize={kSize}") #, #pairwise_comparisons={metadata_dict['edges']}")
 
 id_to_kmer_count = {}
 with open(kmer_count_tsv) as IN:
