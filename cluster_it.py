@@ -35,8 +35,8 @@ with open(id_to_name_file) as F:
         id_to_name[int(line[0])] = line[1]
 
 
-distance_col_idx = -1 # avg ani
-# distance_col_idx = -2 # avg cont
+# distance_col_idx = -1 # avg ani
+distance_col_idx = -2 # avg cont
 
 graph = rx.PyGraph()
 nodes_indeces = graph.add_nodes_from(list(id_to_name.keys()))
