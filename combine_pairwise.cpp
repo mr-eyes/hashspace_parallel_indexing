@@ -10,11 +10,13 @@
 
 #if CALC_ANI
 
+
 #include <Python.h>
 
 class toANI {
 public:
     PyObject* moduleMainString, * moduleMain, * func;
+    bool initialized = false;
 
     toANI() {
         Py_Initialize();
@@ -23,6 +25,7 @@ public:
         moduleMain = PyImport_Import(moduleMainString);
         PyRun_SimpleString("def to_ani(a,b,c,d): return containment_to_distance(a, b, c, n_unique_kmers=d).ani");
         func = PyObject_GetAttrString(moduleMain, "to_ani");
+        initialized = true;
     }
 
     float calculate(float containment, long kSize, long scale, long n_unique_kmers) {
@@ -157,7 +160,7 @@ int main(int argc, char** argv) {
         end_1 = (thread_num_1 + 1) * n_1 / num_threads_1;
 
         for (vec_i_1 = start_1; vec_i_1 != end_1; ++vec_i_1) {
-            auto& filename = filenames[vec_i_1];
+            auto filename = filenames[vec_i_1];
             load_edges(filename, edges);
             totalbar.update();
         }
@@ -185,8 +188,10 @@ int main(int argc, char** argv) {
 
 #if CALC_ANI
     toANI ANI;
+    cout <<  "initialized:::: " << ANI.initialized << endl;
 #endif
 
+    cout << "iterating " << edges->size() << " edges..";
 
     for (const auto& edge : *edges) {
         // Skipping shared_kmers < 5
@@ -195,11 +200,20 @@ int main(int argc, char** argv) {
         float cont_2_in_1 = (float)edge.second / group_id_to_kmer_count[edge.first.first];
         float avg_containment = (cont_1_in_2 + cont_2_in_1) / 2.0;
         float max_containment = max(cont_1_in_2, cont_2_in_1);
+        float ani_1_in_2 = 0.0;
+        float ani_2_in_1 = 0.0;
+        float avg_ani = 0.0;
+        cout << "ani_1_in_2: " << ani_1_in_2 << " | ani_2_in_1: " << ani_2_in_1 << " | avg_ani: " << avg_ani << endl;
+
 #if CALC_ANI
-        float ani_1_in_2 = ANI.calculate(cont_1_in_2, kSize, metadata_map["scale"], metadata_map["scale"] * group_id_to_kmer_count[edge.first.second]);
-        float ani_2_in_1 = ANI.calculate(cont_2_in_1, kSize, metadata_map["scale"], metadata_map["scale"] * group_id_to_kmer_count[edge.first.first]);
-        float avg_ani = (ani_1_in_2 + ani_2_in_1) / 2;
+        cout <<  "initialized:::: " << ANI.initialized << endl;
+
+        ani_1_in_2 = ANI.calculate(cont_1_in_2, kSize, metadata_map["scale"], metadata_map["scale"] * group_id_to_kmer_count[edge.first.second]);
+        ani_2_in_1 = ANI.calculate(cont_2_in_1, kSize, metadata_map["scale"], metadata_map["scale"] * group_id_to_kmer_count[edge.first.first]);
+        avg_ani = (ani_1_in_2 + ani_2_in_1) / 2;
 #endif
+
+        cout << "ani_1_in_2: " << ani_1_in_2 << " | ani_2_in_1: " << ani_2_in_1 << " | avg_ani: " << avg_ani << endl;
 
         myfile
             << edge.first.first
@@ -211,6 +225,7 @@ int main(int argc, char** argv) {
             << max_containment
             << "\t"
             << avg_containment
+
 #if CALC_ANI
             << "\t" << avg_ani
 #endif
